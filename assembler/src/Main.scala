@@ -1,27 +1,24 @@
 import scala.io.Source
+import scala.util.Using
+import java.io.File
 
-object Main {
+object Main:
     @main
     def init(args: String*): Unit =
         args.length match
-            case 0 => help
             case 1 => proccess(args(0))
-            case _ => println("multiple choices?")
+            case _ => help
 
     def help: Unit =
         println("How to use me")
         println("assembler file.asm")
 
+    def readFile(path: String): Option[String] =
+      val file = new File(path)
+      if !file.exists() then None
+      else Using(Source.fromFile(file))(_.mkString).toOption
 
     def proccess(file: String): Unit =
-        // use Try, dont want to write any try {} catch {} code
-        println(s"open contents of $file")
-
-        // Option(file_string) match
-        println("taking that, turning it into string")
-        // do you remember crafting interpreters?
-        println("feed that to a 'assembler'\n[ASSEMBLER]")
-        println("- Lexer")
-        println("- Tokenizer")
-        println("- Serializer")
-}
+        println(file)
+        val source : Option[String] = readFile(file)
+        println(source)
