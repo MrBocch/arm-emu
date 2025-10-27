@@ -22,6 +22,6 @@ object Main:
         println(file)
         val source : Option[String] = readFile(file)
         source match {
-            case Some(s) => println(Lexer.lexemes(s))
+            case Some(s) => Lexer.lexemes(s).filter(_!="").foreach(println)
             case _ => println("Failed to open file")
         }
