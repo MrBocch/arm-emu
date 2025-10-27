@@ -21,4 +21,7 @@ object Main:
     def proccess(file: String): Unit =
         println(file)
         val source : Option[String] = readFile(file)
-        println(source)
+        source match {
+            case Some(s) => println(Lexer.lexemes(s))
+            case _ => println("Failed to open file")
+        }
