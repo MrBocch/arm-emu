@@ -10,3 +10,7 @@ Not a complete 100% clone. *Whats different?*
 
 - Assembler
 - Emulator
+
+## Notes
+
+comment ";"
