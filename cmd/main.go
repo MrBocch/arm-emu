@@ -1,7 +1,7 @@
 package main
 
 import (
-    // "os"
+    "os"
 	"fmt"
 	"github.com/MrBocch/arm-emu/cmd/assembler"
 	//"github.com/charmbracelet/lipgloss"
@@ -15,8 +15,19 @@ import (
 //func (m model) View() string {return style.Render(s)}
 
 func main(){
-	fmt.Println("hello")
-	assembler.Test()
-    // p := tea.NewProgram(initialModel())
-    // if _, err := p.Run(); err != nil {
+	if len(os.Args) == 1 {
+		fmt.Println("How to use me")
+		fmt.Println("arm-emu [filepath]")
+		os.Exit(1)
+	}
+
+	path := os.Args[1]
+	file, err := os.ReadFile(path)
+	if err != nil {
+		fmt.Println("Could not find")
+		fmt.Println(path)
+		os.Exit(1)
+	}
+	assembler.Lex(string(file))
+
 }

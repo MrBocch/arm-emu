@@ -18,18 +18,18 @@ input_array:
 	b selection_sort
 
 selection_sort:
-	cmp r0, r2               
-	beq break                   ; break if i == size 
+	cmp r0, r2
+	beq break                   ; break if i == size
 	cmp r1, r2
 	beq reset_j                 ; if j == size { i++; j = i }
 
 	ldr r11, [r3 + r0]          ; a[i]
 	ldr r12, [r3 + r1]          ; a[j]
-	cmp r11, r12 	
-	bgt swap 
-after_swap: 
+	cmp r11, r12
+	bgt swap
+after_swap:
 	add r1, r1, #4
-	b selection_sort 
+	b selection_sort
 
 reset_j:
 	add r0, r0, #4             ; i++
@@ -40,16 +40,16 @@ swap:
 	str r11, [r3 + r1]
 	str r12, [r3 + r0]
 	b after_swap
- 
+
 break:
 	halt
 
 before_sort: .asciz "Before sorting\n"
-after_sort: .asciz  "\nAfter sorting\n" 
+after_sort: .asciz  "\nAfter sorting\n"
 
 ;; the array will be "allocated" after all the code
 ;; the ideal location.
 ;; but, what if you had to arrays? if they are static, no problem arr2 = (arr1*size)+1 ?
-;; 
+;;
 end_of_code:
-
+;;
