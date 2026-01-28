@@ -18,7 +18,7 @@ func Lex(code string) []string {
        	case ';': state = "comment"; continue
         case '/':
         	if i + 1 >= len(code) {
-         		panic("unended comment") // should have actual system for reporting errors
+         		panic("unexpected token") // should have actual system for reporting errors
          	}
           	if code[i+1] == '/' { state = "comment"; continue }
        	}
