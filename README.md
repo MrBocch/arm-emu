@@ -13,4 +13,14 @@ Not a complete 100% clone. *Whats different?*
 
 ## Notes
 
-comment ";"
+Support for comments
+
+```C
+// this is a comment
+;; this is also a comment
+/* Multiline
+ * comments also.
+ // can even nested comments
+ /* like this */
+*/
+```

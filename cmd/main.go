@@ -1,11 +1,11 @@
 package main
 
 import (
-    "os"
+	"os"
 	"fmt"
 	"github.com/MrBocch/arm-emu/cmd/assembler"
-	//"github.com/charmbracelet/lipgloss"
 	//tea "github.com/charmbracelet/bubbletea"
+	//"github.com/charmbracelet/lipgloss"
 )
 
 //type model struct {}
