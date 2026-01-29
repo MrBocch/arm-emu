@@ -24,8 +24,8 @@ func main(){
 	path := os.Args[1]
 	file, err := os.ReadFile(path)
 	if err != nil {
-		fmt.Println("Could not find")
-		fmt.Println(path)
+		fmt.Print("Could not find: ")
+		fmt.Println("[" + path + "]")
 		os.Exit(1)
 	}
 	assembler.Lex(string(file))
