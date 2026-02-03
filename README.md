@@ -18,9 +18,19 @@ Comments
 ```C
 // this is a comment
 ;; this is also a comment
-/* Multiline
+<!-- /* Multiline -->
  * comments also.
 */
 ```
 
 No doubly nesting comments. 
+
+## Implementation (✅/❌)
+
+| opcode   | implemented | 
+|----------|-------------|
+| mov      |     ❌      |
+| add      |     ❌      |
+| sub      |     ❌      | 
+
+....

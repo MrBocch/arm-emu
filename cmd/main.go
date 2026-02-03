@@ -28,6 +28,7 @@ func main(){
 		fmt.Println("[" + path + "]")
 		os.Exit(1)
 	}
-	assembler.Lex(string(file))
+	tokens := assembler.Lex(string(file))
+	fmt.Print(tokens)
 
 }
