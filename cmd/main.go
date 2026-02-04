@@ -29,6 +29,6 @@ func main(){
 		os.Exit(1)
 	}
 	tokens := assembler.Lex(string(file))
-	fmt.Print(tokens)
+	assembler.PrintTokens(tokens)
 
 }

@@ -12,14 +12,11 @@ func Lex(code string) []Token {
 	old_line := 0
 	line := 1
 	var tokens []Token 
-	// currLexeme := ""
+	currLexeme := ""
 
     for i := 0; i < len(code); i++ {
-    	if false && old_line != line {
-    		fmt.Printf("\n")
-    		fmt.Printf("[%03d]: ", line)
-    		old_line = line 
-    	}
+    	if false && old_line != line { fmt.Printf("\n"); fmt.Printf("[%03d]: ", line); old_line = line }
+
 		if state == "comment" {
 			start := line
 			for j := i +1; j < len(code)-1; j++ {
@@ -39,11 +36,17 @@ func Lex(code string) []Token {
       	byte := code[i]
       	switch byte {
        	case ';':
-       	    for j := i+1; code[j] != '\n' && j < len(code); j++ {
-       	    	i = j
-       	    }
+       	    for j := i+1; code[j] != '\n' && j < len(code); j++ { i = j }
+        case '/':
+        	if i + 1 >= len(code) { panic("error '/''") } // should have actual system for reporting errors 
+          	if code[i+1] == '/' {
+          		for j := i+1; code[j] != '\n' && j < len(code); j++ { i = j }
+          		continue 
+          	}
+          	if code[i+1] == '*' { state = "comment"; continue }
+          	panic(fmt.Sprintf("[%d]: unexpected token '/'", line))
 
-       	case '\n':
+        case '\n':
        		if len(tokens) == 0 {
        			line += 1
        			continue
@@ -55,31 +58,84 @@ func Lex(code string) []Token {
       		tokens = append(tokens, Token{Kind: NewLine, Line: line})
       		line += 1
 
+      	case '.':
+      		tokens = append(tokens, Token{Kind: Dot, Line: line})
       	case ',':
+      		if currLexeme != "" { tokens = append(tokens, Token{Kind: Identifier, Line: line, Lexeme: currLexeme})}
+      		currLexeme = ""
       		tokens = append(tokens, Token{Kind: Comma, Line: line})
       	case ':':
+      		if currLexeme != "" { tokens = append(tokens, Token{Kind: Identifier, Line: line, Lexeme: currLexeme})}
+      		currLexeme = ""
       		tokens = append(tokens, Token{Kind: Colon, Line: line})
       	case '#':
+      		if currLexeme != "" { tokens = append(tokens, Token{Kind: Identifier, Line: line, Lexeme: currLexeme})}
+      		currLexeme = ""
       		tokens = append(tokens, Token{Kind: Hash, Line: line})
       	case '-':
+      		if currLexeme != "" { tokens = append(tokens, Token{Kind: Identifier, Line: line, Lexeme: currLexeme})}
+      		currLexeme = ""
       		tokens = append(tokens, Token{Kind: Minus, Line: line})
       	case '+':
+      		if currLexeme != "" { tokens = append(tokens, Token{Kind: Identifier, Line: line, Lexeme: currLexeme})}
+      		currLexeme = ""
       		tokens = append(tokens, Token{Kind: Minus, Line: line})
-
-        case '/':
-        	if i + 1 >= len(code) { panic("error '/''") } // should have actual system for reporting errors 
-          	if code[i+1] == '/' {
-          		for j := i+1; code[j] != '\n' && j < len(code); j++ { i = j }
-          		continue 
-          	}
-          	if code[i+1] == '*' { state = "comment"; continue }
-          	panic(fmt.Sprintf("[%d]: unexpected token '/'", line))
-
+      	case '[':
+      		if currLexeme != "" { tokens = append(tokens, Token{Kind: Identifier, Line: line, Lexeme: currLexeme})}
+      		currLexeme = ""
+      		tokens = append(tokens, Token{Kind: RightBracket, Line: line})
+      	case ']':
+      		if currLexeme != "" { tokens = append(tokens, Token{Kind: Identifier, Line: line, Lexeme: currLexeme})}
+      		currLexeme = ""
+      		tokens = append(tokens, Token{Kind: LeftBracket, Line: line})
+      	case ' ':
+      		if currLexeme == "" { continue }
+      		tokens = append(tokens, Token{Kind: Identifier, Line: line, Lexeme: currLexeme})
+      		currLexeme = ""
 		default:
+			currLexeme += string(byte) 
        		if false { fmt.Printf("%c", byte) }
        	}
        	
     }
 
 	return tokens
+}
+
+func PrintTokens(tokens []Token) {
+	typetoString := func (token Token) string {
+		switch token.Kind {
+		case Identifier: 	
+			return "IDENTIFIER"
+		case Number:
+			return "NUMBER"
+		case Plus:
+			return "PLUS"
+		case Minus:
+			return "MINUS"
+		case LeftBracket:
+			return "LEFTBRACKET"
+		case RightBracket:
+			return "RIGHTBRACKET"
+		case Dot:
+			return "DOT"
+		case Comma:
+			return "COMMA"
+		case Hash:
+			return "HASH"
+		case ZeroB:
+			return "0Bit"
+		case NewLine:
+			return "NEWLINE"
+		
+		}
+		return "err"
+	}
+	for _, t := range tokens {
+		k := typetoString(t)
+		l := t.Line
+		lex := t.Lexeme 
+		if lex != "" { fmt.Printf("(%s %s %d)\n", k, lex, l) }
+		if lex == "" { fmt.Printf("(%s %d)\n", k, l) }
+	}
 }

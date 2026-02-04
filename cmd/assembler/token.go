@@ -10,12 +10,11 @@ const (
     Minus
     Colon    
     LeftBracket
-    RightBraket
+    RightBracket
     Dot
     Comma
     Hash
     ZeroB
-    Dash
     NewLine
 )
 
