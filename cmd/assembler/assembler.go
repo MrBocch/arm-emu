@@ -35,15 +35,26 @@ func Lex(code string) []Token {
 		
       	byte := code[i]
       	switch byte {
+      	// handle the case you run into a "a string : that might contain \n"
+      	// cant imagine it would be too hard, just like a comment just that you add to thing
        	case ';':
+      		if currLexeme != "" { tokens = append(tokens, Token{Kind: Identifier, Line: line, Lexeme: currLexeme})}
+      		currLexeme = ""
        	    for j := i+1; code[j] != '\n' && j < len(code); j++ { i = j }
         case '/':
         	if i + 1 >= len(code) { panic("error '/''") } // should have actual system for reporting errors 
           	if code[i+1] == '/' {
+	      		if currLexeme != "" { tokens = append(tokens, Token{Kind: Identifier, Line: line, Lexeme: currLexeme})}
+	      		currLexeme = ""
           		for j := i+1; code[j] != '\n' && j < len(code); j++ { i = j }
           		continue 
           	}
-          	if code[i+1] == '*' { state = "comment"; continue }
+          	if code[i+1] == '*' {
+	      		if currLexeme != "" { tokens = append(tokens, Token{Kind: Identifier, Line: line, Lexeme: currLexeme})}
+	      		currLexeme = ""
+          		state = "comment";
+          		continue
+          	}
           	panic(fmt.Sprintf("[%d]: unexpected token '/'", line))
 
         case '\n':
@@ -55,10 +66,15 @@ func Lex(code string) []Token {
        			line += 1
        			continue 
        		}
+
+      		if currLexeme != "" { tokens = append(tokens, Token{Kind: Identifier, Line: line, Lexeme: currLexeme})}
+      		currLexeme = ""
       		tokens = append(tokens, Token{Kind: NewLine, Line: line})
       		line += 1
 
       	case '.':
+      		if currLexeme != "" { tokens = append(tokens, Token{Kind: Identifier, Line: line, Lexeme: currLexeme})}
+      		currLexeme = ""
       		tokens = append(tokens, Token{Kind: Dot, Line: line})
       	case ',':
       		if currLexeme != "" { tokens = append(tokens, Token{Kind: Identifier, Line: line, Lexeme: currLexeme})}
@@ -79,7 +95,7 @@ func Lex(code string) []Token {
       	case '+':
       		if currLexeme != "" { tokens = append(tokens, Token{Kind: Identifier, Line: line, Lexeme: currLexeme})}
       		currLexeme = ""
-      		tokens = append(tokens, Token{Kind: Minus, Line: line})
+      		tokens = append(tokens, Token{Kind: Plus, Line: line})
       	case '[':
       		if currLexeme != "" { tokens = append(tokens, Token{Kind: Identifier, Line: line, Lexeme: currLexeme})}
       		currLexeme = ""
@@ -92,6 +108,11 @@ func Lex(code string) []Token {
       		if currLexeme == "" { continue }
       		tokens = append(tokens, Token{Kind: Identifier, Line: line, Lexeme: currLexeme})
       		currLexeme = ""
+      	case '\t':
+      		if currLexeme == "" { continue }
+      		tokens = append(tokens, Token{Kind: Identifier, Line: line, Lexeme: currLexeme})
+      		currLexeme = ""
+
 		default:
 			currLexeme += string(byte) 
        		if false { fmt.Printf("%c", byte) }
@@ -127,6 +148,8 @@ func PrintTokens(tokens []Token) {
 			return "0Bit"
 		case NewLine:
 			return "NEWLINE"
+		case Colon:  // because switch not exhaustive, ran into issue bc i forgor
+			return "COLON"
 		
 		}
 		return "err"
