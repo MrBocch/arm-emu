@@ -66,38 +66,12 @@ func Lex(code string) []Token {
       		addToken(&tokens, NewLine, "", line)
       		line += 1
 
-      	case '.':
-      		if currLexeme != "" { addToken(&tokens, Identifier, currLexeme, line) }
-      		currLexeme = ""
-      		addToken(&tokens, Dot, "", line)
-      	case ',':
-      		if currLexeme != "" { addToken(&tokens, Identifier, currLexeme, line) }
-      		currLexeme = ""
-      		addToken(&tokens, Comma, "", line)
-      	case ':':
-      		if currLexeme != "" { addToken(&tokens, Identifier, currLexeme, line) }
-      		currLexeme = ""
-      		addToken(&tokens, Colon, "", line)
-      	case '#':
-      		if currLexeme != "" { addToken(&tokens, Identifier, "", line) }
-      		currLexeme = ""
-      		addToken(&tokens, Hash, "", line)
-      	case '-':
-      		if currLexeme != "" { addToken(&tokens, Identifier, "", line) }
-      		currLexeme = ""
-      		addToken(&tokens, Minus, "", line)
-      	case '+':
-      		if currLexeme != "" { addToken(&tokens, Identifier, currLexeme, line) }
-      		currLexeme = ""
-      		addToken(&tokens, Plus, "", line)
-      	case '[':
-      		if currLexeme != "" { addToken(&tokens, Identifier, currLexeme, line) }
-      		currLexeme = ""
-      		addToken(&tokens, RightBracket, "", line)
-      	case ']':
-      		if currLexeme != "" { addToken(&tokens, Identifier, currLexeme, line) }
-      		currLexeme = ""
-      		addToken(&tokens, LeftBracket, "", line)
+      	case '+', '-', ':', '[', ']', '.', ',', '#':
+			if currLexeme != "" { addToken(&tokens, Identifier, currLexeme, line)}
+			t := tokenTypeFromByte(byte)
+			currLexeme = ""
+			addToken(&tokens, t, "", line)
+
       	case ' ', '\t':
       		if currLexeme == "" { continue }
       		addToken(&tokens, Identifier, currLexeme, line)
@@ -157,3 +131,27 @@ func PrintTokens(tokens []Token) {
 		if k == "NEWLINE" { fmt.Println() }
 	}
 }
+
+func tokenTypeFromByte(b byte) TType {
+    switch b {
+    case '+':
+        return Plus
+    case '-':
+        return Minus
+    case ':':
+        return Colon
+    case '[':
+        return LeftBracket
+    case ']':
+        return RightBracket
+    case '.':
+        return Dot
+    case ',':
+        return Comma
+    case '#':
+        return Hash
+    }
+    // should return err in this case
+    return Identifier
+}
+
