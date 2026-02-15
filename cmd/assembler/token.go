@@ -16,6 +16,7 @@ const (
     Hash
     ZeroB
     NewLine
+    StringLiteral
 )
 
 type Token struct {

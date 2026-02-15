@@ -16,7 +16,7 @@ func Lex(code string) []Token {
     for i := 0; i < len(code); i++ {
 		if state == "comment" {
 			start := line
-			for j := i +1; j < len(code)-1; j++ {
+			for j := i + 1; j < len(code)-1; j++ {
 				if code[j] == '\n' { line += 1 }
 				if code[j] == '/' && code[j+1] == '*' {
 					panic(fmt.Sprintf("[%d]: Can't nest multiline comments", line))
@@ -77,6 +77,18 @@ func Lex(code string) []Token {
       		addToken(&tokens, Identifier, currLexeme, line)
       		currLexeme = ""
 
+      	case '"':
+      		// currLexeme should be empty? idk
+        	stringLiteral := ""
+			for j := i + 1; j < len(code)-1; j++ {
+				// TODO add escaping strings support \"
+				i = j
+				if code[j] == '"' { break }
+				stringLiteral += string(code[j])
+			}
+        	if i + 1 >= len(code) { panic("unclosed string") } // should have actual system for reporting errors 
+			addToken(&tokens, StringLiteral, stringLiteral, line)
+
 		default:
 			currLexeme += string(byte) 
        		if false { fmt.Printf("%c", byte) }
@@ -118,6 +130,8 @@ func PrintTokens(tokens []Token) {
 			return "NEWLINE"
 		case Colon:
 	        return "COLON"
+	    case StringLiteral:
+	    	return "STRINGLITERAL"
 		
 		}
 		return "err"
@@ -126,9 +140,16 @@ func PrintTokens(tokens []Token) {
 		k := typetoString(t)
 		l := t.Line
 		lex := t.Lexeme 
-		if lex != "" { fmt.Printf("(%s %s %d)\n", k, lex, l) }
-		if lex == "" { fmt.Printf("(%s %d)\n", k, l) }
-		if k == "NEWLINE" { fmt.Println() }
+		if t.Kind == StringLiteral {
+			fmt.Println("* STRING LITERAL")
+			fmt.Printf("* [%s]", lex)
+			fmt.Println("")
+		} else {
+			if lex != "" { fmt.Printf("(%s %s %d)\n", k, lex, l) }
+			if lex == "" { fmt.Printf("(%s %d)\n", k, l) }
+			if k == "NEWLINE" { fmt.Println() }		
+		}
+
 	}
 }
 
