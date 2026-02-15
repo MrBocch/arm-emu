@@ -66,7 +66,7 @@ func Lex(code string) []Token {
       		addToken(&tokens, NewLine, "", line)
       		line += 1
 
-      	case '+', '-', ':', '[', ']', '.', ',', '#':
+      	case '+', '-', ':', '[', ']', '{', '}','.', ',', '#':
 			if currLexeme != "" { addToken(&tokens, Identifier, currLexeme, line)}
 			t := tokenTypeFromByte(byte)
 			currLexeme = ""
@@ -118,6 +118,10 @@ func PrintTokens(tokens []Token) {
 			return "LEFTBRACKET"
 		case RightBracket:
 			return "RIGHTBRACKET"
+		case LeftCurly:
+			return "LEFTCURLY"
+		case RightCurly:
+			return "RIGHTCURLY"
 		case Dot:
 			return "DOT"
 		case Comma:
@@ -161,10 +165,16 @@ func tokenTypeFromByte(b byte) TType {
         return Minus
     case ':':
         return Colon
+    // would make more sense if it were named
+    // opening and closing braces
     case '[':
         return LeftBracket
-    case ']':
+    case ']': 
         return RightBracket
+    case '{':
+    	return LeftCurly
+    case '}':
+    	return RightCurly
     case '.':
         return Dot
     case ',':

@@ -11,6 +11,8 @@ const (
     Colon    
     LeftBracket
     RightBracket
+    LeftCurly
+    RightCurly
     Dot
     Comma
     Hash
