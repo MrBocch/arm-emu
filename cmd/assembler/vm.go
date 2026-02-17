@@ -17,6 +17,9 @@ func Run() {
 		r10 := 0
 		r11 := 0
 		r12 := 0
+		lr := 0
+		sp := 0
+		pc := 0
 	*/
 
 	fmt.Println("running code")
