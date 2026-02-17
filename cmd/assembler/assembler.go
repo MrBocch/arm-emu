@@ -1,7 +1,8 @@
 package assembler
 
 import (
-	"fmt"
+    "fmt"
+    "strings"
 )
 
 // only support ascii
@@ -33,19 +34,28 @@ func Lex(code string) []Token {
       	byte := code[i]
       	switch byte {
        	case ';':
-      		if currLexeme != "" { addToken(&tokens, Identifier, currLexeme, line) }
+      		if currLexeme != "" {
+      			ttype := identifyLex(currLexeme)
+      		    addToken(&tokens, ttype, currLexeme, line)
+      		}
       		currLexeme = ""
        	    for j := i+1; code[j] != '\n' && j < len(code); j++ { i = j }
         case '/':
         	if i + 1 >= len(code) { panic("error '/''") } // should have actual system for reporting errors 
           	if code[i+1] == '/' {
-          	    if currLexeme != "" { addToken(&tokens, Identifier, currLexeme, line) }
+          	    if currLexeme != "" {
+          	    	ttype := identifyLex(currLexeme)
+          	    	addToken(&tokens, ttype, currLexeme, line)
+          	    }
           	    currLexeme = ""
           		for j := i+1; code[j] != '\n' && j < len(code); j++ { i = j }
           		continue 
           	}
           	if code[i+1] == '*' {
-          	    if currLexeme != "" { addToken(&tokens, Identifier, currLexeme, line) }
+          	    if currLexeme != "" {
+          	    	ttype := identifyLex(currLexeme)
+          	    	addToken(&tokens, ttype, currLexeme, line)
+          	    }
           	    currLexeme = ""
           	    state = "comment"
           	    continue
@@ -53,7 +63,10 @@ func Lex(code string) []Token {
           	panic(fmt.Sprintf("[%d]: unexpected token '/'", line))
 
         case '\n':
-      		if currLexeme != "" { addToken(&tokens, Identifier, currLexeme, line) }
+      		if currLexeme != "" {
+      			ttype := identifyLex(currLexeme)
+      			addToken(&tokens, ttype, currLexeme, line)
+      		}
       		currLexeme = ""
       		if len(tokens) == 0 {
        			line += 1
@@ -67,14 +80,18 @@ func Lex(code string) []Token {
       		line += 1
 
       	case '+', '-', ':', '[', ']', '{', '}','.', ',', '#':
-			if currLexeme != "" { addToken(&tokens, Identifier, currLexeme, line)}
+			if currLexeme != "" {
+				ttype := identifyLex(currLexeme)
+				addToken(&tokens, ttype, currLexeme, line)
+			}
 			t := tokenTypeFromByte(byte)
 			currLexeme = ""
 			addToken(&tokens, t, "", line)
 
       	case ' ', '\t':
       		if currLexeme == "" { continue }
-      		addToken(&tokens, Identifier, currLexeme, line)
+      		ttype := identifyLex(currLexeme)
+      		addToken(&tokens, ttype, currLexeme, line)
       		currLexeme = ""
 
       	case '"':
@@ -128,15 +145,20 @@ func PrintTokens(tokens []Token) {
 			return "COMMA"
 		case Hash:
 			return "HASH"
-		case ZeroB:
-			return "0Bit"
 		case NewLine:
 			return "NEWLINE"
 		case Colon:
 	        return "COLON"
 	    case StringLiteral:
 	    	return "STRINGLITERAL"
-		
+	    case Instruction:
+	    	return "OP"
+	    case Register:
+	    	return "REG"
+	    case BitNumber:
+	    	return "BITNUMBER"
+	    case HexNumber:
+	    	return "HexNumber"
 		}
 		return "err"
 	}
@@ -186,3 +208,36 @@ func tokenTypeFromByte(b byte) TType {
     return Identifier
 }
 
+func identifyLex(lex string) TType {
+	if len(lex) > 2 && lex[0:2] == "0b" { return BitNumber }
+	if len(lex) > 2 && lex[0:2] == "0x" { return HexNumber }
+	if isOp(lex) { return Instruction }
+	if isDigit(lex[0]) { return Number } // if first char is a number, assume its a number
+	if isRegister(lex) { return Register }
+
+	return Identifier
+}
+
+func isDigit(s byte) bool {
+	switch s {
+	case '0','1','2', '3','4','5','6','7','8','9': { return true }
+	}
+	return false 
+}
+
+func isOp(op string) bool {
+	switch strings.ToLower(op) {
+	// its bad to combinar code + data, get this from somewhere else, dont want to
+	// track several lists of ops 
+	case "mov", "add", "sub","str","ldr","cmp", "beq", "b", "bgt", "push", "pop","bl", "adds","halt": { return true }
+	}
+	return false 
+}
+
+func isRegister(reg string) bool {
+	switch strings.ToLower(reg) {
+	case "r0","r1","r2","r3","r4", "r5", "r6", "r7","r8", "r9", "r10", "r11", "r12",
+		 "r13","r14","r15","lr","sp","pc": { return true }
+	}
+	return false 
+}

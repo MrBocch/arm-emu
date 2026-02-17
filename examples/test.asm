@@ -1,6 +1,6 @@
 // this is a comment
 ;;  😁 this is also a comment
-add r1, r1, #3
+add r1, r1, 0xcafe999
 // need to add logic making sure
 // someone doesn't try to nest comments
 
@@ -11,5 +11,4 @@ add r1, r1, #3
  * they way they supposed to
  *
  // yup
- /* this shouldn't work */ 
 */
