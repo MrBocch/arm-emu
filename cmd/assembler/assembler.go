@@ -76,7 +76,7 @@ func Lex(code string) []Token {
        			line += 1
        			continue 
        		}
-      		addToken(&tokens, NewLine, "", line)
+      		addToken(&tokens, NewLine, "\\n", line)
       		line += 1
 
       	case '+', '-', ':', '[', ']', '{', '}','.', ',', '#':
@@ -86,7 +86,7 @@ func Lex(code string) []Token {
 			}
 			t := tokenTypeFromByte(byte)
 			currLexeme = ""
-			addToken(&tokens, t, "", line)
+			addToken(&tokens, t, string(byte), line)
 
       	case ' ', '\t':
       		if currLexeme == "" { continue }

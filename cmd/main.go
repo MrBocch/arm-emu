@@ -4,6 +4,7 @@ import (
 	"os"
 	"fmt"
 	"github.com/MrBocch/arm-emu/cmd/assembler"
+	//"github.com/MrBocch/arm-emu/cmd/vm"
 	//tea "github.com/charmbracelet/bubbletea"
 	//"github.com/charmbracelet/lipgloss"
 )
@@ -29,6 +30,8 @@ func main(){
 		os.Exit(1)
 	}
 	tokens := assembler.Lex(string(file))
-	assembler.PrintTokens(tokens)
+	// assembler.PrintTokens(tokens)
+	assembler.Analyze(tokens)
+	// vm.HardvardRun(tokens)
 
 }
