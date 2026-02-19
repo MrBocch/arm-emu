@@ -158,7 +158,7 @@ func PrintTokens(tokens []Token) {
 	    case BitNumber:
 	    	return "BITNUMBER"
 	    case HexNumber:
-	    	return "HexNumber"
+	    	return "HEXNUMBER"
 		}
 		return "err"
 	}
