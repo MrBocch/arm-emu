@@ -10,10 +10,10 @@ func Analyze(tokens []Token) {
 	for _, t := range tokens {
 		if t.Kind != NewLine { line = append(line, t); continue }
 
-		fmt.Printf("Analyze %v -> %v\n", line, checkSyntax(line))
+		//fmt.Printf("Analyze %v -> %v\n", line, checkSyntax(line))
 		// do something for real.
 		if !checkSyntax(line) {
-			fmt.Printf("[Error] line %v\n", line[0].Line)
+			printError(line)
 		} 
 		line = line[:0]
 	}
@@ -48,5 +48,13 @@ func checkMov(line []Token) bool {
 			   isNumber(line[4])
 	default:
 		return false 
+	}
+}
+
+func printError(line []Token) {
+	// TODO: how about more helpful error messages? 
+	fmt.Printf("[ERROR]\n[LINE: %v] ", line[0].Line)
+	for _, t := range line {
+		fmt.Printf("%v ", t.Lexeme)
 	}
 }
