@@ -1,0 +1,7 @@
+# https://github.com/typst/hayagriva/blob/main/docs/file-format.md
+unix-comment:
+    type: Web
+    title: Unix Most Notorious Comment 
+    serial-number: v2.5
+    author: David Cassel
+    url: https://thenewstack.io/not-expected-understand-explainer/
