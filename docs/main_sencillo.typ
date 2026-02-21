@@ -1,5 +1,4 @@
 #import "portada_template.typ": *
-// #import "portada_template.typ": *
 
 #let fecha = datetime(
   year:  2026,
@@ -23,13 +22,19 @@
 )
 
 #set par(justify: true)
-#set heading(numbering: "1.")
 
+#set heading(numbering: "1.")
+//#set text(font: "New Computer Modern")
 
 #outline(
     title: [Indice],
 )
+#set page(
+  numbering: "1",
+  number-align: right,
+)
 
+#let header_bcolor = rgb(184, 209, 191)
 
 #pagebreak()
 
@@ -105,9 +110,34 @@ dependencias de hardware específico.
 
 == Cronograma
 
-#figure(
-  image("img/gant.png", width: 95%),
-)
+// #figure(image("img/gant.png", width: 95%),)
+
+#text(font: "Comic Neue", size: 10pt)[
+  #table(
+    inset: 8pt,
+    columns: (19%, auto, auto, auto, auto, auto, auto, auto),
+    rows: (auto, 50pt, 50pt, 50pt, 50pt, 50pt, 50pt,),
+    align: (left, left, left),
+    table.header(
+      table.cell(align: center+horizon, fill: header_bcolor,)[#text(style:"italic")[Actividades]],
+      table.cell(align: center+horizon, fill: header_bcolor)[#text(style:"italic")[Enero 22-31]],
+      table.cell(align: center+horizon, fill: header_bcolor)[#text(style:"italic")[Febrero 1-15]],
+      table.cell(align: center+horizon, fill: header_bcolor)[#text(style:"italic")[Febrero 16-31]],
+      table.cell(align: center+horizon, fill: header_bcolor)[#text(style:"italic")[Marzo 1-15]],
+      table.cell(align: center+horizon, fill: header_bcolor)[#text(style:"italic")[Marzo 16-31]],
+      table.cell(align: center+horizon, fill: header_bcolor)[#text(style:"italic")[Abril 1-15]],
+      table.cell(align: center+horizon, fill: header_bcolor)[#text(style:"italic")[Abril 16-31]],
+    ),
+    table.cell(fill: header_bcolor,)[Analisis y diseño], table.cell(fill: red)[], [], [], [], [], [], [],
+    table.cell(fill: header_bcolor)[Desarollo del assembler],[],table.cell(fill: red)[],table.cell(fill: red)[],table.cell(fill: red)[],[],[],[],
+    table.cell(fill: header_bcolor)[Implementacion de la maquina virtual],[],[],table.cell(fill: red)[],table.cell(fill: red)[],table.cell(fill: red)[],[],[],
+    table.cell(fill: header_bcolor)[Elaboracion de la documentacion],[],[],[],[],table.cell(fill: red)[],table.cell(fill:red)[],table.cell(fill: red)[],
+    table.cell(fill: header_bcolor)[Elaboracionde integracion y pruebas],[],[],[],[],[],table.cell(fill: red)[],table.cell(fill: red)[],
+    table.cell(fill: header_bcolor)[Refinamiento],[],[],[],[],[],[],table.cell(fill: red)[],
+  )
+]
+
+
 
 === Análisis y Diseño
 
@@ -358,19 +388,22 @@ Cada instrucción será codificada explícitamente en formato binario, y la
 máquina virtual se encargará de decodificar y reinterpretar esos bits como
 instrucciones ARM simplificadas. Esto permite estudiar directamente el proceso de fetch–decode–execute.
 
-#let header_bcolor = rgb(184, 209, 191)
 //#let header_tcolor = rgb(245, 247, 250)
-#align(center)[
-  #table(
-    inset: 10pt,
-    columns: (25%, 50%, 25%),
-    align: (center, left, left),
-    table.header(
-      table.cell(align: center+horizon, fill: header_bcolor)[#text(style:"italic")[Instrucion]],
-      table.cell(align: center+horizon, fill: header_bcolor)[#text(style:"italic")[Descripcion]],
-      table.cell(align: center+horizon, fill: header_bcolor)[#text(style:"italic")[Ejemplo]],
-    ),
-    [mov], [Copia el valor de un registro a otro registro], [`mov Rd, Rs`],
-    [mov], [Copia un numero a un registro], [`mov Rd, #42`],
-  )
+#text(font: "Comic Neue", size: 10pt)[
+  #align(center)[
+    #table(
+      inset: 10pt,
+      columns: (25%, 50%, 25%),
+      align: (center, left, left),
+      table.header(
+        table.cell(align: center+horizon, fill: header_bcolor)[#text()[Instrucion]],
+        table.cell(align: center+horizon, fill: header_bcolor)[#text()[Descripcion]],
+        table.cell(align: center+horizon, fill: header_bcolor)[#text()[Ejemplo]],
+      ),
+      [mov], [Copia el valor de un registro a otro registro], [`mov Rd, Rs`],
+      [mov], [Copia un numero a un registro], [`mov Rd, #42`],
+      [add], [Suma valor de dos registro a registro resultante], [`add Rd, Rs1, Rs2`],
+      [add], [Suma registro mas a valor, y lo guarda en registro], [`add Rd, Rs1, #42`],
+    )
+  ]
 ]
