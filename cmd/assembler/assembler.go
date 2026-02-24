@@ -229,7 +229,7 @@ func isOp(op string) bool {
 	switch strings.ToLower(op) {
 	// its bad to combinar code + data, get this from somewhere else, dont want to
 	// track several lists of ops 
-	case "mov", "add", "sub","str","ldr","cmp", "beq", "b", "bgt", "push", "pop","bl", "adds","halt": { return true }
+	case "mov", "add", "sub", "str","ldr","cmp", "beq", "b", "bgt", "push", "pop","bl", "adds","halt": { return true }
 	}
 	return false 
 }

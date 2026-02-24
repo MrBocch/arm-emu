@@ -19,7 +19,9 @@ const (
 	RightBracket
 	LeftCurly
 	RightCurly
-	Dot
+
+	Dot // maybe this should not be its own token
+
 	Comma
 	Hash
 	NewLine
