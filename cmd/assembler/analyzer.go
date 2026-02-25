@@ -27,32 +27,52 @@ func getLabels(tokens []Token) map[string]int {
 
 func Analyze(tokens []Token) {
 	var line [] Token
-	haveErr := false 
-	userLabels := getLabels(tokens)
+	// haveErr := false 
+	// userLabels := getLabels(tokens)
+	// fmt.Println(userLabels)
 	// directives should prob check for them just like labels, and
 	// store the action that the program must load into memory once running vm 
-	fmt.Println(userLabels)
 
 	for _, t := range tokens {
 		if t.Kind != NewLine { line = append(line, t); continue }
 
+		op, _ := checkAdd(line)
+		fmt.Println(op)
+		
+		switch v := op.(type) {
+		case Oprr:
+			fmt.Println("RR instruction:", v)
+		case Opri:
+			fmt.Println("RI instruction:", v)
+		case Oprrr:
+			fmt.Println("RRR instruction", v)
+		case Oprri:
+			fmt.Println("RRI instruction", v)
+		default:
+			fmt.Println("bad instruction", line[0].Line)
+		}
+
 		//fmt.Printf("Analyze %v -> %v\n", line, checkSyntax(line))
 		// do something for real.
-		if !checkSyntax(line) {
-			printError(line)
-			haveErr = true 
-		} else {
-			if !haveErr {
-				// encode
-			}
-		}
+		// if !checkSyntax(line) {
+			// printError(line)
+			// haveErr = true 
+		// } 
+		// if !haveErr {
+			// encode
+			// Encode()
+		// }
+
+		
 		line = line[:0]
 	}
 
 }
 
-func checkSyntax(line []Token) bool {
-	if len(line) == 0 { return false }
+func checkSyntax(line []Token) (Op, error) {
+	if len(line) == 0 { return nil, fmt.Errorf("Empty instruction") }
+	return checkMov(line)
+	/*
 	switch strings.ToLower(line[0].Lexeme) {
 	case "mov":
 		return checkMov(line) 
@@ -86,6 +106,7 @@ func checkSyntax(line []Token) bool {
 		return checkIdentifier(line)
 	}
 	return false 
+	*/
 }
 
 func isNumber(tok Token) bool {
@@ -97,70 +118,67 @@ func isNumber(tok Token) bool {
 // mov r0, r1
 // mov r0, #(number)
 // mov r0, #msg // meaning mov r0, the beggining of msg assembly directive
-func checkMov(line []Token) bool {
-	// TODO negative numbers 
+func checkMov(line []Token) (Op, error) {
+	// TODO: negative numbers
 	switch len(line) {
 	case 4:
-		return line[1].Kind == Register &&
-			   line[2].Kind == Comma &&
-			   line[3].Kind == Register 
-	case 5:
-		return line[1].Kind == Register &&
-			   line[2].Kind == Comma &&
-			   line[3].Kind == Hash && (isNumber(line[4]) || line[4].Kind == Identifier)
-	default:
-		return false 
-	}
-}
+		if line[1].Kind == Register &&
+			line[2].Kind == Comma &&
+			line[3].Kind == Register {
 
+			return Oprr{ op: "mov", r1: lower(line[1].Lexeme), r2: lower(line[3].Lexeme),}, nil
+		}
+
+	case 5:
+		if line[1].Kind == Register &&
+			line[2].Kind == Comma &&
+			line[3].Kind == Hash &&
+			(isNumber(line[4]) || line[4].Kind == Identifier) {
+			// TODO: parse immediate
+			return Opri{ op: "mov", r1: lower(line[1].Lexeme), i:  0,}, nil
+		}
+	}
+
+	return nil, fmt.Errorf("invalid mov instruction")
+}
 
 // add r0, r1, r2
 // add r0, r1, #0b11
 // add r0, r1, #3
 // add r0, r1, #0xA
-func checkAdd(line []Token) bool {
+func checkAdd(line []Token) (Op, error) {
 	// TODO negative numbers 
 	switch len(line){
 	case 6:
-		return line[1].Kind == Register &&
-			   line[2].Kind == Comma &&
-			   line[3].Kind == Register &&
-			   line[4].Kind == Comma &&
-			   line[5].Kind == Register
+		if line[1].Kind == Register && line[2].Kind == Comma && line[3].Kind == Register && line[4].Kind == Comma && line[5].Kind == Register {
+			return Oprrr{ op: "add", r1: lower(line[1].Lexeme), r2: lower(line[3].Lexeme), r3: lower(line[5].Lexeme),}, nil
+		}
 	case 7:
-		return line[1].Kind == Register &&
-			   line[2].Kind == Comma &&
-			   line[3].Kind == Register &&
-			   line[4].Kind == Comma &&
-			   line[5].Kind == Hash &&
-			   isNumber(line[6])
-	default:
-		return false
+		if line[1].Kind == Register && line[2].Kind == Comma && line[3].Kind == Register && line[4].Kind == Comma && line[5].Kind == Hash && isNumber(line[6]) {
+		   	// parse immediate
+		   	return Oprri{ op: "add", r1: lower(line[1].Lexeme), r2: lower(line[3].Lexeme), i: 0,}, nil
+		   }
 	}
+	return nil, fmt.Errorf("invalid add instruction")
 }
 
 // sub r0, r1, r2
 // sub r0, r1, #(number)
-func checkSub(line []Token) bool {
+func checkSub(line []Token) (Op, error) {
 	// TODO negative numbers 
 	switch len(line) {
 	case 6:
-		return line[1].Kind == Register &&
-			   line[2].Kind == Comma &&
-			   line[3].Kind == Register &&
-			   line[4].Kind == Comma &&
-			   line[5].Kind == Register
+		if line[1].Kind == Register && line[2].Kind == Comma && line[3].Kind == Register && line[4].Kind == Comma && line[5].Kind == Register {
+			return Oprrr{ op: "sub", r1: lower(line[1].Lexeme), r2: lower(line[3].Lexeme), r3: lower(line[5].Lexeme),}, nil
+		}
 	case 7:
-		return line[1].Kind == Register &&
-			   line[2].Kind == Comma &&
-			   line[3].Kind == Register &&
-			   line[4].Kind == Comma &&
-			   line[5].Kind == Hash &&
-			   isNumber(line[6])
-	default:
-		return false
+		if  line[1].Kind == Register && line[2].Kind == Comma && line[3].Kind == Register && line[4].Kind == Comma && line[5].Kind == Hash && isNumber(line[6]) {
+			// parse immediate
+			return Oprri{ op: "sub", r1: lower(line[1].Lexeme), r2: lower(line[3].Lexeme), i: 0,}, nil
+		}
 	}
 
+	return nil, fmt.Errorf("invalid sub instruction")
 }
 
 // cmp r0, r1
@@ -308,4 +326,8 @@ func printError(line []Token) {
 		fmt.Printf("%v ", t.Lexeme)
 	}
 	fmt.Println()
+}
+
+func lower(s string) string {
+	return strings.ToLower(s)
 }
