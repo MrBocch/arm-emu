@@ -20,7 +20,7 @@ const (
 	LeftCurly
 	RightCurly
 
-	Dot // maybe this should not be its own token
+	//Dot // maybe this should not be its own token
 
 	Comma
 	Hash

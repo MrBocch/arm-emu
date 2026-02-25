@@ -5,8 +5,34 @@ import (
     "strings"
 )
 
+func getLabels(tokens []Token) map[string]int {
+	// what about directives? 
+	idx := 0
+	var line [] Token
+	labels := make(map[string]int)
+	for _, t := range tokens {
+		if t.Kind != NewLine { line = append(line, t); continue }
+
+		if line[0].Kind == Identifier &&
+		   line[1].Kind == Colon {
+		   	labels[line[0].Lexeme] = idx
+	   } else {
+	   		idx += 4
+	   }
+
+		line = line[:0]
+	}
+	return labels
+}
+
 func Analyze(tokens []Token) {
 	var line [] Token
+	haveErr := false 
+	userLabels := getLabels(tokens)
+	// directives should prob check for them just like labels, and
+	// store the action that the program must load into memory once running vm 
+	fmt.Println(userLabels)
+
 	for _, t := range tokens {
 		if t.Kind != NewLine { line = append(line, t); continue }
 
@@ -14,11 +40,15 @@ func Analyze(tokens []Token) {
 		// do something for real.
 		if !checkSyntax(line) {
 			printError(line)
+			haveErr = true 
 		} else {
-			fmt.Printf("Encoding: %v\n", line)
+			if !haveErr {
+				// encode
+			}
 		}
 		line = line[:0]
 	}
+
 }
 
 func checkSyntax(line []Token) bool {
@@ -44,7 +74,16 @@ func checkSyntax(line []Token) bool {
 		return checkBgt(line)
 	case "bne":
 		return checkBne(line)
+	case "ldr":
+		return checkLdr(line)
+	case "and":
+		return checkAnd(line)
+	case "str":
+		return checkStr(line)
 
+	default:
+		// check for identifier
+		return checkIdentifier(line)
 	}
 	return false 
 }
@@ -56,9 +95,8 @@ func isNumber(tok Token) bool {
 
 
 // mov r0, r1
-// mov r0, #0b101
-// mov r0, #1
-// mov r0, #0x10
+// mov r0, #(number)
+// mov r0, #msg // meaning mov r0, the beggining of msg assembly directive
 func checkMov(line []Token) bool {
 	// TODO negative numbers 
 	switch len(line) {
@@ -69,8 +107,7 @@ func checkMov(line []Token) bool {
 	case 5:
 		return line[1].Kind == Register &&
 			   line[2].Kind == Comma &&
-			   line[3].Kind == Hash &&
-			   isNumber(line[4])
+			   line[3].Kind == Hash && (isNumber(line[4]) || line[4].Kind == Identifier)
 	default:
 		return false 
 	}
@@ -78,9 +115,9 @@ func checkMov(line []Token) bool {
 
 
 // add r0, r1, r2
-// add r0, #0b11
-// add r0, #3
-// add r0, #0xA
+// add r0, r1, #0b11
+// add r0, r1, #3
+// add r0, r1, #0xA
 func checkAdd(line []Token) bool {
 	// TODO negative numbers 
 	switch len(line){
@@ -90,20 +127,20 @@ func checkAdd(line []Token) bool {
 			   line[3].Kind == Register &&
 			   line[4].Kind == Comma &&
 			   line[5].Kind == Register
-	case 5:
+	case 7:
 		return line[1].Kind == Register &&
 			   line[2].Kind == Comma &&
-			   line[3].Kind == Hash &&
-			   isNumber(line[4])
+			   line[3].Kind == Register &&
+			   line[4].Kind == Comma &&
+			   line[5].Kind == Hash &&
+			   isNumber(line[6])
 	default:
 		return false
 	}
 }
 
 // sub r0, r1, r2
-// sub r0, #0b01
-// sub r0, #2
-// sub r0, #0xA
+// sub r0, r1, #(number)
 func checkSub(line []Token) bool {
 	// TODO negative numbers 
 	switch len(line) {
@@ -113,11 +150,13 @@ func checkSub(line []Token) bool {
 			   line[3].Kind == Register &&
 			   line[4].Kind == Comma &&
 			   line[5].Kind == Register
-	case 5:
+	case 7:
 		return line[1].Kind == Register &&
 			   line[2].Kind == Comma &&
-			   line[3].Kind == Hash &&
-			   isNumber(line[4])
+			   line[3].Kind == Register &&
+			   line[4].Kind == Comma &&
+			   line[5].Kind == Hash &&
+			   isNumber(line[6])
 	default:
 		return false
 	}
@@ -174,11 +213,93 @@ func checkBgt(line []Token) bool {
 	return len(line) == 2 && line[1].Kind == Identifier
 }
 
-// beq label
-func checkNeq(line []Token) bool {
+// bne label
+func checkBne(line []Token) bool {
 	// TODO check if its an actuall user defined label
 	return len(line) == 2 && line[1].Kind == Identifier
 }
+
+
+// and r0, r1, r2
+// and r0, r1, #(number)
+func checkAnd(line []Token) bool {
+	switch len(line){
+	case 6:
+		return line[1].Kind == Register &&
+			   line[2].Kind == Comma &&
+			   line[3].Kind == Register &&
+			   line[4].Kind == Comma &&
+			   line[5].Kind == Register
+	case 7:
+		return line[1].Kind == Register &&
+		   line[2].Kind == Comma &&
+		   line[3].Kind == Register &&
+		   line[4].Kind == Comma &&
+		   line[5].Kind == Hash &&
+		   isNumber(line[6])
+
+	}
+	return false
+}
+
+// address must be divisable by 4
+// str r0, .Thing
+// str r0, number 
+// str r0, [r1]
+// str r0, [r1,r2]
+// str r0, [r1 + r2]
+// str r0, [r1 - r2]
+func checkStr(line []Token) bool {
+	switch len(line) {
+	case 4:
+		return line[1].Kind == Register && line[2].Kind == Comma && (isNumber(line[3]) || line[3].Kind == Identifier)
+	case 6:
+		return line[1].Kind == Register && line[2].Kind == Comma && line[3].Kind == LeftBracket && line[4].Kind == Register && line[5].Kind == RightBracket
+	case 8:
+		return line[1].Kind == Register &&
+			   line[2].Kind == Comma &&
+			   line[3].Kind == LeftBracket &&
+			   line[4].Kind == Register &&
+			   (line[5].Kind == Comma || line[5].Kind == Plus || line[5].Kind == Minus) &&
+			   line[6].Kind == Register &&
+			   line[7].Kind == RightBracket
+	}
+	return false 
+}
+
+// address must be divisable by 4
+// ldr r0, .Thing
+// ldr r0, number 
+// ldr r0, [r1]
+// ldr r0, [r1 , r2]
+// ldr r0, [r1 + r2]
+// ldr r0, [r1 - r2]
+func checkLdr(line []Token) bool {
+	switch len(line) {
+	case 4:
+		return line[1].Kind == Register && line[2].Kind == Comma && (isNumber(line[3]) || line[3].Kind == Identifier)
+	// case 5: return line[1].Kind == Register && line[2].Kind == Comma && line[3].Kind == Identifier
+	case 6:
+		return line[1].Kind == Register && line[2].Kind == Comma && line[3].Kind == LeftBracket && line[4].Kind == Register && line[5].Kind == RightBracket
+	case 8:
+		return line[1].Kind == Register &&
+			   line[2].Kind == Comma &&
+			   line[3].Kind == LeftBracket &&
+			   line[4].Kind == Register &&
+			   (line[5].Kind == Comma || line[5].Kind == Plus || line[5].Kind == Minus) &&
+			   line[6].Kind == Register &&
+			   line[7].Kind == RightBracket
+	}
+	return false
+}
+
+// userIdentifier:
+func checkIdentifier(line []Token) bool {
+	// TODO check for user defined/built in identifiers
+	// what about assembly directives? 
+	return line[0].Kind == Identifier && line[1].Kind == Colon
+}
+
 
 func printError(line []Token) {
 	// TODO: how about more helpful error messages? 

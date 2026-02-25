@@ -47,6 +47,7 @@ wonStr: .ASCIZ "You won!\n"
 lostStr: .ASCIZ "You lost!\n"
 theNumStr: .ASCIZ "The number was: "
 
+/*
 1|      mov r12, #0x0
 2|      mov r0, #.Pixel0
 3|      mov r1, #0xFF0000
@@ -65,3 +66,4 @@ theNumStr: .ASCIZ "The number was: "
 16|color:
 17|      mov r1, #0xFF0000
 18|      b loop
+*/

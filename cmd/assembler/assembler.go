@@ -79,7 +79,7 @@ func Lex(code string) []Token {
       		addToken(&tokens, NewLine, "\\n", line)
       		line += 1
 
-      	case '+', '-', ':', '[', ']', '{', '}','.', ',', '#':
+      	case '+', '-', ':', '[', ']', '{', '}', ',', '#':
 			if currLexeme != "" {
 				ttype := identifyLex(currLexeme)
 				addToken(&tokens, ttype, currLexeme, line)
@@ -139,8 +139,7 @@ func PrintTokens(tokens []Token) {
 			return "LEFTCURLY"
 		case RightCurly:
 			return "RIGHTCURLY"
-		case Dot:
-			return "DOT"
+		//case Dot: return "DOT"
 		case Comma:
 			return "COMMA"
 		case Hash:
@@ -197,8 +196,7 @@ func tokenTypeFromByte(b byte) TType {
     	return LeftCurly
     case '}':
     	return RightCurly
-    case '.':
-        return Dot
+    // case '.': return Dot
     case ',':
         return Comma
     case '#':
@@ -229,7 +227,7 @@ func isOp(op string) bool {
 	switch strings.ToLower(op) {
 	// its bad to combinar code + data, get this from somewhere else, dont want to
 	// track several lists of ops 
-	case "mov", "add", "sub", "str","ldr","cmp", "beq", "b", "bgt", "push", "pop","bl", "adds","halt": { return true }
+	case "mov", "add", "sub", "str","ldr","cmp", "beq", "b", "bgt", "push", "pop", "bl", "adds","halt", "ret": { return true }
 	}
 	return false 
 }
