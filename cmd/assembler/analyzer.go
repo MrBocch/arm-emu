@@ -36,22 +36,12 @@ func Analyze(tokens []Token) {
 	for _, t := range tokens {
 		if t.Kind != NewLine { line = append(line, t); continue }
 
-		op, _ := checkAdd(line)
-		fmt.Println(op)
-		
-		switch v := op.(type) {
-		case Oprr:
-			fmt.Println("RR instruction:", v)
-		case Opri:
-			fmt.Println("RI instruction:", v)
-		case Oprrr:
-			fmt.Println("RRR instruction", v)
-		case Oprri:
-			fmt.Println("RRI instruction", v)
-		default:
-			fmt.Println("bad instruction", line[0].Line)
+		op, err := getStructure(line)
+		if err != nil {
+			fmt.Printf("[ERROR] %v", line[0].Line)
+			fmt.Println(err)
 		}
-
+		fmt.Println(op)
 		//fmt.Printf("Analyze %v -> %v\n", line, checkSyntax(line))
 		// do something for real.
 		// if !checkSyntax(line) {
@@ -69,10 +59,9 @@ func Analyze(tokens []Token) {
 
 }
 
-func checkSyntax(line []Token) (Op, error) {
+func getStructure(line []Token) (Op, error) {
 	if len(line) == 0 { return nil, fmt.Errorf("Empty instruction") }
-	return checkMov(line)
-	/*
+	
 	switch strings.ToLower(line[0].Lexeme) {
 	case "mov":
 		return checkMov(line) 
@@ -82,6 +71,9 @@ func checkSyntax(line []Token) (Op, error) {
 		return checkSub(line)
 	case "halt":
 		return checkHalt(line)
+	}
+	return nil, fmt.Errorf("invalid instruction instruction")
+	/*
 	case "cmp":
 		return checkCmp(line)
 	case "b":
@@ -203,8 +195,11 @@ func checkCmp(line []Token) bool {
 }
 
 // halt 
-func checkHalt(line []Token) bool {
-	return len(line) == 1
+func checkHalt(line []Token) (Op, error) {
+	if len(line) == 1 && lower(line[0].Lexeme) == "halt" {
+		return Opp{ op: "halt", }, nil
+	}
+	return nil, fmt.Errorf("invalid halt instruction")
 }
 
 // b label

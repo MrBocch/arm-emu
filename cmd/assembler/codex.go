@@ -7,6 +7,15 @@ type Op interface {
 	isOp()
 }
 
+// halt 
+type Opp struct {
+	op string
+}
+func (Opp) isOp() {}
+func (o Opp) String() string {
+	return fmt.Sprintf("%s", o.op)
+}
+
 // OP, R, R
 type Oprr struct { 
 	op string 
