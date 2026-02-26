@@ -65,6 +65,15 @@ func (o Oprrr) String() string {
 }
 
 
+func opToS(op Op) string {
+	switch op.(type) {
+	case Opp: return ""
+	case Oprr: return "rr"
+	case Opri: return "ri"
+	case Oprrr: return "rrr"
+	}
+	return ""
+}
 
 func flipMap(m map[string]string) map[string]string {
 	fm := make(map[string]string)
@@ -105,13 +114,27 @@ var bToRegister = flipMap(registerToB)
 // op ri (register, imediate)
 // op rr (register, rr)
 var opToB = map[string]string {
-	"halt": "00000000",
+	"halt":  "00000000",
+	"movrr": "00000001",
+	"movri": "00000010",
+	"addrrr":"00000011",
+	"addrri":"00000100",
+	"subrrr":"00000101",
+	"subrri":"00000101",
+	
 }
 
 var bToOp = flipMap(opToB)
 
-func Encode(t Token, labels map[string]int) string {
+// what if I used closures here, the function takes the map, and returns the actuall function
+// that will map over the things idk, an idea
+func Encode(op Op, labels map[string]int) string {
 	bs := ""
+	switch v := op.(type) {
+	case Opp: return padding(opToB[v.op])
+	case Oprr: return padding(opToB[v.op + "rr"] + registerToB[v.r1] + registerToB[v.r2])
+	case Oprrr: return padding(opToB[v.op + "rrr"] + registerToB[v.r1] + registerToB[v.r2] + registerToB[v.r3])
+	}
 	return bs 
 }
 

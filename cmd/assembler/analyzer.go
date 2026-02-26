@@ -28,7 +28,7 @@ func getLabels(tokens []Token) map[string]int {
 func Analyze(tokens []Token) {
 	var line [] Token
 	// haveErr := false 
-	// userLabels := getLabels(tokens)
+	userLabels := getLabels(tokens)
 	// fmt.Println(userLabels)
 	// directives should prob check for them just like labels, and
 	// store the action that the program must load into memory once running vm 
@@ -38,10 +38,12 @@ func Analyze(tokens []Token) {
 
 		op, err := getStructure(line)
 		if err != nil {
-			fmt.Printf("[ERROR] %v", line[0].Line)
+			fmt.Printf("[ERROR LINE %v]\n", line[0].Line)
 			fmt.Println(err)
+		} else {
+			fmt.Println(op, Encode(op, userLabels))
 		}
-		fmt.Println(op)
+		// fmt.Println(op)
 		//fmt.Printf("Analyze %v -> %v\n", line, checkSyntax(line))
 		// do something for real.
 		// if !checkSyntax(line) {
