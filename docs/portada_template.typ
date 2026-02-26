@@ -79,10 +79,11 @@
   // Si es enquipo pon aqui datos de equipo
     [*Nombre*], [*Matricula*], [*Carrera*],
     [#nombre], [#matricula], [#carrera],
-    [Integrante 2], [Matricula 2], [x],
-    [Integrante 3], [Matricula 3], [x],
-    [Integrante 4], [Matricula 4], [x],
-    [Integrante 5], [Matricula 5], [x],
+    // should rewrite the function instead of hardcoding this
+    [Omar González Fernández], [1909514], [ITS],
+    [Luis Angel Luna Corona], [1555326], [ITS],
+    [Javier López Pérez], [2127884], [ITS],
+    [Victor Manuel Lopez Lugo], [2000013], [ITS],
   )
 
   // manualmente cambiar espacio (deberia hacer esto con footer)
