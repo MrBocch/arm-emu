@@ -74,11 +74,12 @@ func getStructure(line []Token) (Op, error) {
 		return checkSub(line)
 	case "halt":
 		return checkHalt(line)
+	case "cmp":
+		return checkCmp(line)
 	}
 	return nil, fmt.Errorf("invalid instruction instruction")
 	/*
-	case "cmp":
-		return checkCmp(line)
+
 	case "b":
 		return checkB(line)
 	case "blt":
@@ -187,21 +188,20 @@ func checkSub(line []Token) (Op, error) {
 // cmp r0, #0b10
 // cmp r0, #10
 // cmp r0, #0xA
-func checkCmp(line []Token) bool {
+func checkCmp(line []Token) (Op, error) {
 	// TODO negative numbers
 	switch len(line) {
 	case 4:
-		return line[1].Kind == Register &&
-			   line[2].Kind == Comma &&
-			   line[3].Kind == Register
+		if line[1].Kind == Register && line[2].Kind == Comma && line[3].Kind == Register {
+			return Oprr{ op: "cmp", r1: lower(line[1].Lexeme), r2: lower(line[3].Lexeme)}, nil
+		}
 	case 5:
-		return line[1].Kind == Register &&
-			   line[2].Kind == Comma &&
-			   line[3].Kind == Hash &&
-			   isNumber(line[4])
-	default:
-		return false
+		if line[1].Kind == Register && line[2].Kind == Comma && line[3].Kind == Hash && isNumber(line[4]) {
+			imm := parseImm(line[4])
+			return Opri{ op: "cmp", r1: lower(line[1].Lexeme), i: imm}, nil
+		}
 	}
+	return nil, fmt.Errorf("invalid cmp instruction")
 }
 
 // halt 

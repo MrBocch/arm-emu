@@ -121,6 +121,8 @@ var opToB = map[string]string {
 	"addrri":"00000100",
 	"subrrr":"00000101",
 	"subrri":"00000101",
+	"cmprr" :"00000110",
+	"cmpri" :"00000111",
 	
 }
 
