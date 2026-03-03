@@ -32,7 +32,7 @@ func (o Oprr) String() string {
 type Opri struct {
 	op string
 	r1 string
-	i  uint32
+	i  int32
 }
 func (Opri) isOp() {}
 func (o Opri) String() string {
@@ -45,7 +45,7 @@ type Oprri struct {
 	op string
 	r1 string
 	r2 string
-	i  uint32
+	i  int32
 }
 func (Oprri) isOp() {}
 func (o Oprri) String() string {
@@ -133,7 +133,9 @@ func Encode(op Op, labels map[string]int) string {
 	switch v := op.(type) {
 	case Opp: return padding(opToB[v.op])
 	case Oprr: return padding(opToB[v.op + "rr"] + registerToB[v.r1] + registerToB[v.r2])
+	case Opri: return padding(opToB[v.op + "ri"] + registerToB[v.r1] + iToB20(v.i))
 	case Oprrr: return padding(opToB[v.op + "rrr"] + registerToB[v.r1] + registerToB[v.r2] + registerToB[v.r3])
+	case Oprri: return padding(opToB[v.op + "rri"] + registerToB[v.r1] + registerToB[v.r2] + iToB16(v.i))
 	}
 	return bs 
 }
@@ -149,4 +151,38 @@ func padding(s string) string {
 	}
 
 	return s 
+}
+
+func iToB20(n int32) string {
+	const (
+		width = 20
+		max   = (1 << (width - 1)) - 1  //  524287
+		min   = -(1 << (width - 1))     // -524288
+	)
+
+	if n > max || n < min {
+		panic("immediate out of 20-bit signed range")
+	}
+
+	// mask to 20 bits (two's complement)
+	u := uint32(n) & ((1 << width) - 1)
+
+	return fmt.Sprintf("%020b", u)
+}
+
+func iToB16(n int32) string {
+	const (
+		width = 16
+		max   = (1 << (width - 1)) - 1  //  32767
+		min   = -(1 << (width - 1))     // -32768
+	)
+
+	if n > max || n < min {
+		panic("immediate out of 16-bit signed range")
+	}
+
+	// mask to 16 bits (two's complement)
+	u := uint32(n) & ((1 << width) - 1)
+
+	return fmt.Sprintf("%016b", u)
 }

@@ -3,6 +3,7 @@ package assembler
 import (
     "fmt"
     "strings"
+	"strconv"
 )
 
 func getLabels(tokens []Token) map[string]int {
@@ -129,7 +130,13 @@ func checkMov(line []Token) (Op, error) {
 			line[3].Kind == Hash &&
 			(isNumber(line[4]) || line[4].Kind == Identifier) {
 			// TODO: parse immediate
-			return Opri{ op: "mov", r1: lower(line[1].Lexeme), i:  0,}, nil
+			var imm int32
+			if isNumber(line[4]) {
+				imm = parseImm(line[4])
+			}
+
+			// imm could also be a identifier builtin? mov r0, #Random?   
+			return Opri{ op: "mov", r1: lower(line[1].Lexeme), i:  imm,}, nil
 		}
 	}
 
@@ -150,7 +157,8 @@ func checkAdd(line []Token) (Op, error) {
 	case 7:
 		if line[1].Kind == Register && line[2].Kind == Comma && line[3].Kind == Register && line[4].Kind == Comma && line[5].Kind == Hash && isNumber(line[6]) {
 		   	// parse immediate
-		   	return Oprri{ op: "add", r1: lower(line[1].Lexeme), r2: lower(line[3].Lexeme), i: 0,}, nil
+		   	imm := parseImm(line[6])
+		   	return Oprri{ op: "add", r1: lower(line[1].Lexeme), r2: lower(line[3].Lexeme), i: imm,}, nil
 		   }
 	}
 	return nil, fmt.Errorf("invalid add instruction")
@@ -327,4 +335,33 @@ func printError(line []Token) {
 
 func lower(s string) string {
 	return strings.ToLower(s)
+}
+
+func parseImm(tok Token) int32 {
+	var base int
+	var value string
+
+	switch tok.Kind {
+	case BitNumber:
+		base = 2
+		value = tok.Lexeme[2:] // strip "0b"
+
+	case HexNumber:
+		base = 16
+		value = tok.Lexeme[2:] // strip "0x"
+
+	case Number:
+		base = 10
+		value = tok.Lexeme
+
+	default:
+		panic("unexpected token type for immediate")
+	}
+
+	n, err := strconv.ParseInt(value, base, 32)
+	if err != nil {
+		panic("invalid immediate: " + tok.Lexeme)
+	}
+
+	return int32(n)
 }
