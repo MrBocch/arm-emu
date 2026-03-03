@@ -118,25 +118,15 @@ func checkMov(line []Token) (Op, error) {
 	// TODO: negative numbers
 	switch len(line) {
 	case 4:
-		if line[1].Kind == Register &&
-			line[2].Kind == Comma &&
-			line[3].Kind == Register {
-
+		if line[1].Kind == Register && line[2].Kind == Comma && line[3].Kind == Register {
 			return Oprr{ op: "mov", r1: lower(line[1].Lexeme), r2: lower(line[3].Lexeme),}, nil
 		}
 
 	case 5:
-		if line[1].Kind == Register &&
-			line[2].Kind == Comma &&
-			line[3].Kind == Hash &&
-			(isNumber(line[4]) || line[4].Kind == Identifier) {
-			// TODO: parse immediate
+		if line[1].Kind == Register && line[2].Kind == Comma && line[3].Kind == Hash && (isNumber(line[4]) || line[4].Kind == Identifier) {
+			// TODO: parse immediate or identifier?
 			var imm int32
-			if isNumber(line[4]) {
-				imm = parseImm(line[4])
-			}
-
-			// imm could also be a identifier builtin? mov r0, #Random?   
+			if isNumber(line[4]) { imm = parseImm(line[4]) } else { panic("parse identifier within mov") }
 			return Opri{ op: "mov", r1: lower(line[1].Lexeme), i:  imm,}, nil
 		}
 	}
@@ -249,11 +239,7 @@ func checkBne(line []Token) bool {
 func checkAnd(line []Token) bool {
 	switch len(line){
 	case 6:
-		return line[1].Kind == Register &&
-			   line[2].Kind == Comma &&
-			   line[3].Kind == Register &&
-			   line[4].Kind == Comma &&
-			   line[5].Kind == Register
+		return line[1].Kind == Register && line[2].Kind == Comma && line[3].Kind == Register && line[4].Kind == Comma && line[5].Kind == Register
 	case 7:
 		return line[1].Kind == Register &&
 		   line[2].Kind == Comma &&
