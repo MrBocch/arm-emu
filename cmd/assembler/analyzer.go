@@ -177,7 +177,8 @@ func checkSub(line []Token) (Op, error) {
 	case 7:
 		if  line[1].Kind == Register && line[2].Kind == Comma && line[3].Kind == Register && line[4].Kind == Comma && line[5].Kind == Hash && isNumber(line[6]) {
 			// parse immediate
-			return Oprri{ op: "sub", r1: lower(line[1].Lexeme), r2: lower(line[3].Lexeme), i: 0,}, nil
+			imm := parseImm(line[6])
+			return Oprri{ op: "sub", r1: lower(line[1].Lexeme), r2: lower(line[3].Lexeme), i: imm,}, nil
 		}
 	}
 
