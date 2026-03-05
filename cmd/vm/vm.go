@@ -4,19 +4,33 @@ import (
 	"fmt"
 	"os"
 	tea "charm.land/bubbletea/v2"
+	"github.com/charmbracelet/lipgloss"
+	// "github.com/charmbracelet/bubbles"
 )
 
 type Computer struct {
-	registers []int
-	mem       []int 
+	registers []int32
+	mem       []int32 
+}
+
+func initComputer(register int, memory int) Computer {
+	return Computer {
+		registers: make([]int32, register),
+		mem      : make([]int32, int(memory)),
+	}
 }
 
 type model struct {
-	counter int 
+	// terminal screen
+	width   int 
+	height  int 
+
+	computer Computer 
 }
 
 func initialModel() model {
-	return model{ counter: 0, }
+	cpu := initComputer(16, 1000)
+	return model{ cpu }
 }
 
 func (m model) Init() tea.Cmd {
@@ -34,10 +48,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
         case "q":
             return m, tea.Quit
         case "up", "k":
-			m.counter++
+			m.computer.registers[0]++
         case "down", "j":
-			m.counter--
+			m.computer.registers[0]--
         }
+
+    case tea.WindowSizeMsg:
+    	m.width = msg.Width
+    	m.height = msg.Height
     }
 
     // Return the updated model to the Bubble Tea runtime for processing.
@@ -46,11 +64,60 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() tea.View {
-    s := fmt.Sprintf("\n\ncount: #%d", m.counter)
-    s += fmt.Sprintf("\n(press q to quit)")
-	
-    // Send the UI for rendering
-    return tea.NewView(s)
+	table := renderRegisters(m.computer.registers)
+
+	centered := lipgloss.Place(
+		m.width,
+		m.height,
+		lipgloss.Center,
+		lipgloss.Center,
+		table,
+	)
+
+	return tea.NewView(centered)
+}
+
+func renderRegisters(reg []int) string {
+	const (
+		labelWidth = 12
+		valueWidth = 10
+	)
+
+	headerStyle := lipgloss.NewStyle().
+		Bold(true).
+		BorderBottom(true)
+
+	labelStyle := lipgloss.NewStyle().
+		Width(labelWidth).
+		Padding(0, 1)
+
+	valueStyle := lipgloss.NewStyle().
+		Width(valueWidth).
+		Padding(0, 1)
+
+	var lines []string
+
+	// ----- Header -----
+	header := lipgloss.JoinHorizontal(
+		lipgloss.Top,
+		labelStyle.Render("Register"),
+		valueStyle.Render("Value"),
+	)
+
+	lines = append(lines, headerStyle.Render(header))
+
+	// ----- Rows (16 registers) -----
+	for i := 0; i < 16 && i < len(reg); i++ {
+		row := lipgloss.JoinHorizontal(
+			lipgloss.Top,
+			labelStyle.Render(fmt.Sprintf("R%d", i)),
+			valueStyle.Render(fmt.Sprintf("%d", reg[i])),
+		)
+
+		lines = append(lines, row)
+	}
+
+	return lipgloss.JoinVertical(lipgloss.Left, lines...)
 }
 
 func Run() {
