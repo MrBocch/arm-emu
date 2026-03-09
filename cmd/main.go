@@ -31,7 +31,14 @@ func main(){
 	}
 	tokens := assembler.Lex(string(file))
 	assembler.PrintTokens(tokens)
-	assembler.Analyze(tokens)
-	vm.Run()
+
+	sbin, err := assembler.Analyze(tokens)
+	if err != nil {
+		fmt.Println("Fix error: ", err)
+		os.Exit(1)
+	}
+
+
+	vm.Run(sbin)
 
 }

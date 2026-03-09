@@ -128,9 +128,8 @@ var opToB = map[string]string {
 
 var bToOp = flipMap(opToB)
 
-// what if I used closures here, the function takes the map, and returns the actuall function
-// that will map over the things idk, an idea
 func Encode(op Op, labels map[string]int) string {
+	// TODO encode labels 
 	bs := ""
 	switch v := op.(type) {
 	case Opp: return padding(opToB[v.op])

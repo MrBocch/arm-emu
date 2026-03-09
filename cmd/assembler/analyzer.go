@@ -26,7 +26,7 @@ func getLabels(tokens []Token) map[string]int {
 	return labels
 }
 
-func Analyze(tokens []Token) {
+func Analyze(tokens []Token) (string, error) {
 	var line [] Token
 	// haveErr := false 
 	userLabels := getLabels(tokens)
@@ -34,6 +34,8 @@ func Analyze(tokens []Token) {
 	// directives should prob check for them just like labels, and
 	// store the action that the program must load into memory once running vm 
 
+	hasErrors := false 
+	s := ""
 	for _, t := range tokens {
 		if t.Kind != NewLine { line = append(line, t); continue }
 
@@ -41,24 +43,22 @@ func Analyze(tokens []Token) {
 		if err != nil {
 			fmt.Printf("[ERROR LINE %v]\n", line[0].Line)
 			fmt.Println(err)
-		} else {
-			fmt.Println(op, Encode(op, userLabels))
+			hasErrors = true
 		}
-		// fmt.Println(op)
-		//fmt.Printf("Analyze %v -> %v\n", line, checkSyntax(line))
-		// do something for real.
-		// if !checkSyntax(line) {
-			// printError(line)
-			// haveErr = true 
-		// } 
-		// if !haveErr {
-			// encode
-			// Encode()
-		// }
-
 		
+		if !hasErrors {
+			s += Encode(op, userLabels)
+		}
+		
+		// what is this doing? 
 		line = line[:0]
 	}
+
+	if hasErrors {
+		return "", fmt.Errorf("Wont encode due to error")
+	}
+
+	return s, nil
 
 }
 

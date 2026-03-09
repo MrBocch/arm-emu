@@ -6,17 +6,27 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"github.com/charmbracelet/lipgloss"
 	// "github.com/charmbracelet/bubbles"
+	"strings"
 )
 
 type Computer struct {
 	registers []int32
-	mem       []int32 
+	mem       string 
 }
 
-func initComputer(register int, memory int) Computer {
+func padStringRight(s string, size int) string {
+	if len(s) >= size {
+		panic("Not enough memory to write code")
+	}
+
+	return s + strings.Repeat("0", size-len(s))
+}
+
+func initComputer(register int, memory string) Computer {
+	padMemory := padStringRight(memory, 1000)
 	return Computer {
 		registers: make([]int32, register),
-		mem      : make([]int32, int(memory)),
+		mem      : padMemory,
 	}
 }
 
@@ -28,9 +38,11 @@ type model struct {
 	computer Computer 
 }
 
-func initialModel() model {
-	cpu := initComputer(16, 1000)
-	return model{ cpu }
+func initialModel(memory string) model {
+	cpu := initComputer(16, memory)
+	return model {
+		computer: cpu,
+	}
 }
 
 func (m model) Init() tea.Cmd {
@@ -47,10 +59,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
         // These keys should exit the program.
         case "q":
             return m, tea.Quit
-        case "up", "k":
-			m.computer.registers[0]++
-        case "down", "j":
-			m.computer.registers[0]--
+        case "n":
+        	step(&m.computer)
         }
 
     case tea.WindowSizeMsg:
@@ -66,18 +76,29 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m model) View() tea.View {
 	table := renderRegisters(m.computer.registers)
 
+	help := lipgloss.NewStyle().
+		Bold(true).
+		Render("press (n) for next   (q) to quit")
+
+	content := lipgloss.JoinVertical(
+		lipgloss.Left,
+		help,
+		"",
+		table,
+	)
+
 	centered := lipgloss.Place(
 		m.width,
 		m.height,
 		lipgloss.Center,
 		lipgloss.Center,
-		table,
+		content,
 	)
 
 	return tea.NewView(centered)
 }
 
-func renderRegisters(reg []int) string {
+func renderRegisters(reg []int32) string {
 	const (
 		labelWidth = 12
 		valueWidth = 10
@@ -120,10 +141,15 @@ func renderRegisters(reg []int) string {
 	return lipgloss.JoinVertical(lipgloss.Left, lines...)
 }
 
-func Run() {
-    p := tea.NewProgram(initialModel())
+func Run(mem string) {
+    p := tea.NewProgram(initialModel(mem))
     if _, err := p.Run(); err != nil {
         fmt.Printf("Alas, there's been an error: %v", err)
         os.Exit(1)
     }
+}
+ 
+func step(c *Computer) {
+	fmt.Println(c.registers)
+	fmt.Println(c.mem)
 }
