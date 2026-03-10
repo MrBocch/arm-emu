@@ -119,7 +119,7 @@ func checkMov(line []Token) (Op, error) {
 	switch len(line) {
 	case 4:
 		if line[1].Kind == Register && line[2].Kind == Comma && line[3].Kind == Register {
-			return Oprr{ op: "mov", r1: lower(line[1].Lexeme), r2: lower(line[3].Lexeme),}, nil
+			return Oprr{ Op: "mov", R1: lower(line[1].Lexeme), R2: lower(line[3].Lexeme),}, nil
 		}
 
 	case 5:
@@ -127,7 +127,7 @@ func checkMov(line []Token) (Op, error) {
 			// TODO: parse immediate or identifier?
 			var imm int32
 			if isNumber(line[4]) { imm = parseImm(line[4]) } else { panic("parse identifier within mov") }
-			return Opri{ op: "mov", r1: lower(line[1].Lexeme), i:  imm,}, nil
+			return Opri{ Op: "mov", R1: lower(line[1].Lexeme), I:  imm,}, nil
 		}
 	}
 
@@ -143,13 +143,13 @@ func checkAdd(line []Token) (Op, error) {
 	switch len(line){
 	case 6:
 		if line[1].Kind == Register && line[2].Kind == Comma && line[3].Kind == Register && line[4].Kind == Comma && line[5].Kind == Register {
-			return Oprrr{ op: "add", r1: lower(line[1].Lexeme), r2: lower(line[3].Lexeme), r3: lower(line[5].Lexeme),}, nil
+			return Oprrr{ Op: "add", R1: lower(line[1].Lexeme), R2: lower(line[3].Lexeme), R3: lower(line[5].Lexeme),}, nil
 		}
 	case 7:
 		if line[1].Kind == Register && line[2].Kind == Comma && line[3].Kind == Register && line[4].Kind == Comma && line[5].Kind == Hash && isNumber(line[6]) {
 		   	// parse immediate
 		   	imm := parseImm(line[6])
-		   	return Oprri{ op: "add", r1: lower(line[1].Lexeme), r2: lower(line[3].Lexeme), i: imm,}, nil
+		   	return Oprri{ Op: "add", R1: lower(line[1].Lexeme), R2: lower(line[3].Lexeme), I: imm,}, nil
 		   }
 	}
 	return nil, fmt.Errorf("invalid add instruction")
@@ -162,13 +162,13 @@ func checkSub(line []Token) (Op, error) {
 	switch len(line) {
 	case 6:
 		if line[1].Kind == Register && line[2].Kind == Comma && line[3].Kind == Register && line[4].Kind == Comma && line[5].Kind == Register {
-			return Oprrr{ op: "sub", r1: lower(line[1].Lexeme), r2: lower(line[3].Lexeme), r3: lower(line[5].Lexeme),}, nil
+			return Oprrr{ Op: "sub", R1: lower(line[1].Lexeme), R2: lower(line[3].Lexeme), R3: lower(line[5].Lexeme),}, nil
 		}
 	case 7:
 		if  line[1].Kind == Register && line[2].Kind == Comma && line[3].Kind == Register && line[4].Kind == Comma && line[5].Kind == Hash && isNumber(line[6]) {
 			// parse immediate
 			imm := parseImm(line[6])
-			return Oprri{ op: "sub", r1: lower(line[1].Lexeme), r2: lower(line[3].Lexeme), i: imm,}, nil
+			return Oprri{ Op: "sub", R1: lower(line[1].Lexeme), R2: lower(line[3].Lexeme), I: imm,}, nil
 		}
 	}
 
@@ -184,12 +184,12 @@ func checkCmp(line []Token) (Op, error) {
 	switch len(line) {
 	case 4:
 		if line[1].Kind == Register && line[2].Kind == Comma && line[3].Kind == Register {
-			return Oprr{ op: "cmp", r1: lower(line[1].Lexeme), r2: lower(line[3].Lexeme)}, nil
+			return Oprr{ Op: "cmp", R1: lower(line[1].Lexeme), R2: lower(line[3].Lexeme)}, nil
 		}
 	case 5:
 		if line[1].Kind == Register && line[2].Kind == Comma && line[3].Kind == Hash && isNumber(line[4]) {
 			imm := parseImm(line[4])
-			return Opri{ op: "cmp", r1: lower(line[1].Lexeme), i: imm}, nil
+			return Opri{ Op: "cmp", R1: lower(line[1].Lexeme), I: imm}, nil
 		}
 	}
 	return nil, fmt.Errorf("invalid cmp instruction")
@@ -198,7 +198,7 @@ func checkCmp(line []Token) (Op, error) {
 // halt 
 func checkHalt(line []Token) (Op, error) {
 	if len(line) == 1 && lower(line[0].Lexeme) == "halt" {
-		return Opp{ op: "halt", }, nil
+		return Opp{ Op: "halt", }, nil
 	}
 	return nil, fmt.Errorf("invalid halt instruction")
 }

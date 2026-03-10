@@ -7,6 +7,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	// "github.com/charmbracelet/bubbles"
 	"strings"
+	"github.com/MrBocch/arm-emu/cmd/assembler"
 )
 
 type Computer struct {
@@ -23,7 +24,7 @@ func padStringRight(s string, size int) string {
 }
 
 func initComputer(register int, memory string) Computer {
-	padMemory := padStringRight(memory, 1000)
+	padMemory := padStringRight(memory, 32_000)
 	return Computer {
 		registers: make([]int32, register),
 		mem      : padMemory,
@@ -148,8 +149,82 @@ func Run(mem string) {
         os.Exit(1)
     }
 }
+
+var regToI = map[string]int {
+	"r0": 0,
+	"r1": 1,
+	"r2": 2,
+	"r3": 3,
+	"r4": 4,
+	"r5": 5,
+	"r6": 6,
+	"r7": 7,
+	"r8": 8,
+	"r9": 9,
+	"r10":10,
+	"r11":11,
+	"r12":12,
+	"sp": 13,
+	"lr": 14,
+	"pc": 15,
+}
  
 func step(c *Computer) {
-	fmt.Println(c.registers)
-	fmt.Println(c.mem)
+	pc := c.registers[15]
+	// fetch
+	ins := c.mem[pc:pc+32]
+	c.registers[15] += 32
+
+	op, err := assembler.Decode(ins)
+	fmt.Println(op)
+	if err != nil {
+		panic("error")
+	}
+
+	 decode(c, op)
+}
+
+func decode(c *Computer, op assembler.Op) {
+	// switch v := op.(type) {
+	switch v := op.(type) {
+	case assembler.Opp:
+		executeOp(c, v.Op)
+		
+	//case assembler.Oprr:
+		//executeOprr(c, v.Op, v.R1, v.R2)
+	// case assembler.Opri:
+	// case assembler.Oprri:
+	case assembler.Oprrr:
+		executeOprrr(c, v.Op, v.R1, v.R2, v.R3)
+
+	default:
+		fmt.Printf("%T\n", v)
+	}
+}
+
+func executeOp(c *Computer, op string) {
+	switch op {
+	case "halt":
+		os.Exit(0)
+	}
+}
+
+func executeOpr(c *Computer, op string, ) {
+	switch op {
+	case "halt":
+		os.Exit(0)
+	}
+}
+
+func executeOprrr(c *Computer, op string, r1 string, r2 string, r3 string) {
+	rd := regToI[r1]
+	rs1 := regToI[r2]
+	rs2 := regToI[r3]
+
+	switch op {
+		case "subrrr":
+			c.registers[rd] = c.registers[rs1] - c.registers[rs2]
+		case "addrrr":
+			c.registers[rd] = c.registers[rs1] + c.registers[rs2]
+	}
 }

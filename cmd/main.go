@@ -30,7 +30,7 @@ func main(){
 		os.Exit(1)
 	}
 	tokens := assembler.Lex(string(file))
-	assembler.PrintTokens(tokens)
+	// assembler.PrintTokens(tokens)
 
 	sbin, err := assembler.Analyze(tokens)
 	if err != nil {

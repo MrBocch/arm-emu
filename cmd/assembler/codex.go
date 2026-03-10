@@ -1,6 +1,9 @@
 package assembler
 
-import "fmt"
+import (
+	"fmt"
+	"strconv"
+)
 
 // go is shit for not having sum types
 type Op interface {
@@ -9,59 +12,59 @@ type Op interface {
 
 // halt 
 type Opp struct {
-	op string
+	Op string
 }
 func (Opp) isOp() {}
 func (o Opp) String() string {
-	return fmt.Sprintf("%s", o.op)
+	return fmt.Sprintf("%s", o.Op)
 }
 
 // OP, R, R
 type Oprr struct { 
-	op string 
-	r1 string 
-	r2 string 
+	Op string 
+	R1 string 
+	R2 string 
 }
 func (Oprr) isOp() {}
 func (o Oprr) String() string {
-	return fmt.Sprintf("%s %s, %s", o.op, o.r1, o.r2)
+	return fmt.Sprintf("%s %s, %s", o.Op, o.R1, o.R2)
 }
 
 
 // OP R, I
 type Opri struct {
-	op string
-	r1 string
-	i  int32
+	Op string
+	R1 string
+	I  int32
 }
 func (Opri) isOp() {}
 func (o Opri) String() string {
-	return fmt.Sprintf("%s %s, #%d", o.op, o.r1, o.i)
+	return fmt.Sprintf("%s %s, #%d", o.Op, o.R1, o.I)
 }
 
 
 // OP R, R, I
 type Oprri struct {
-	op string
-	r1 string
-	r2 string
-	i  int32
+	Op string
+	R1 string
+	R2 string
+	I  int32
 }
 func (Oprri) isOp() {}
 func (o Oprri) String() string {
-	return fmt.Sprintf("%s %s, %s, #%d", o.op, o.r1, o.r2, o.i)
+	return fmt.Sprintf("%s %s, %s, #%d", o.Op, o.R1, o.R2, o.I)
 }
 
 // OP R, R, R
 type Oprrr struct {
-	op string
-	r1 string
-	r2 string
-	r3 string
+	Op string
+	R1 string
+	R2 string
+	R3 string
 }
 func (Oprrr) isOp() {}
 func (o Oprrr) String() string {
-	return fmt.Sprintf("%s %s, %s, %s", o.op, o.r1, o.r2, o.r3)
+	return fmt.Sprintf("%s %s, %s, %s", o.Op, o.R1, o.R2, o.R3)
 }
 
 
@@ -87,8 +90,7 @@ func flipMap(m map[string]string) map[string]string {
 var registerToB = map[string]string {
 	"r0": "0000",
 	"r1": "0001",
-	"r2": "0010",
-	"r3": "0011",
+	"r2": "0010", "r3": "0011",
 	"r4": "0100",
 	"r5": "0101",
 	"r6": "0110",
@@ -107,6 +109,10 @@ var bToRegister = flipMap(registerToB)
 
 // built in identifiers .WriteString
 
+// should i have used a addition field
+// for knowing instruction type?
+// <type> <op>
+// type ::= OP | OP i | OP r i | OP r i i | OP r r | OP r r i
 
 // 8 bit long instructions?
 // op
@@ -123,25 +129,88 @@ var opToB = map[string]string {
 	"subrri":"00000110",
 	"cmprr" :"00000111",
 	"cmpri" :"00001000",
-	
 }
 
 var bToOp = flipMap(opToB)
 
+// i think it was a mistake to encode as a string
 func Encode(op Op, labels map[string]int) string {
 	// TODO encode labels 
 	bs := ""
 	switch v := op.(type) {
-	case Opp: return padding(opToB[v.op])
-	case Oprr: return padding(opToB[v.op + "rr"] + registerToB[v.r1] + registerToB[v.r2])
-	case Opri: return padding(opToB[v.op + "ri"] + registerToB[v.r1] + iToB20(v.i))
-	case Oprrr: return padding(opToB[v.op + "rrr"] + registerToB[v.r1] + registerToB[v.r2] + registerToB[v.r3])
-	case Oprri: return padding(opToB[v.op + "rri"] + registerToB[v.r1] + registerToB[v.r2] + iToB16(v.i))
+	case Opp: return padding(opToB[v.Op])
+	case Oprr: return padding(opToB[v.Op + "rr"] + registerToB[v.R1] + registerToB[v.R2])
+	case Opri: return padding(opToB[v.Op + "ri"] + registerToB[v.R1] + iToB20(v.I))
+	case Oprrr: return padding(opToB[v.Op + "rrr"] + registerToB[v.R1] + registerToB[v.R2] + registerToB[v.R3])
+	case Oprri: return padding(opToB[v.Op + "rri"] + registerToB[v.R1] + registerToB[v.R2] + iToB16(v.I))
 	}
 	return bs 
 }
 
-func Decode() {}
+func Decode(s string) (Op, error) {
+    // Ensure we have exactly 32 bits
+    if len(s) != 32 {
+		panic("Did not receive 32bit op")
+    }
+    
+    // Extract opcode (first 8 bits)
+    opcode := s[:8]
+    
+    // Find operation name
+    opName, exists := bToOp[opcode]
+    if !exists {
+    	panic(fmt.Errorf("Dont recognize [%s] instruction", opcode))
+    }
+    
+    // Decode based on operation type
+    switch opName {
+    case "halt":
+        return Opp{Op: "halt"}, nil
+        
+    case "movrr":
+        // Format: 8-bit op + 4-bit r1 + 4-bit r2
+        r1 := bToRegister[s[8:12]]
+        r2 := bToRegister[s[12:16]]
+        return Oprr{Op: "mov", R1: r1, R2: r2}, nil
+        
+    case "movri":
+        // Format: 8-bit op + 4-bit r1 + 20-bit immediate
+        r1 := bToRegister[s[8:12]]
+        i, _ := strconv.ParseInt(s[12:32], 2, 32)
+        return Opri{Op: "mov", R1: r1, I: int32(i)}, nil
+        
+    case "addrrr", "subrrr":
+        // Format: 8-bit op + 4-bit r1 + 4-bit r2 + 4-bit r3
+        // Note: remaining bits might be unused or for future expansion
+        opShort := opName[:3] // "add" or "sub"
+        r1 := bToRegister[s[8:12]]
+        r2 := bToRegister[s[12:16]]
+        r3 := bToRegister[s[16:20]]
+        return Oprrr{Op: opShort, R1: r1, R2: r2, R3: r3}, nil
+        
+    case "addrri", "subrri":
+        // Format: 8-bit op + 4-bit r1 + 4-bit r2 + 16-bit immediate
+        opShort := opName[:3] // "add" or "sub"
+        r1 := bToRegister[s[8:12]]
+        r2 := bToRegister[s[12:16]]
+        i, _ := strconv.ParseInt(s[16:32], 2, 32)
+        return Oprri{Op: opShort, R1: r1, R2: r2, I: int32(i)}, nil
+        
+    case "cmprr":
+        // Format: 8-bit op + 4-bit r1 + 4-bit r2
+        r1 := bToRegister[s[8:12]]
+        r2 := bToRegister[s[12:16]]
+        return Oprr{Op: "cmp", R1: r1, R2: r2}, nil
+        
+    case "cmpri":
+        // Format: 8-bit op + 4-bit r1 + 20-bit immediate
+        r1 := bToRegister[s[8:12]]
+        i, _ := strconv.ParseInt(s[12:32], 2, 32)
+        return Opri{Op: "cmp", R1: r1, I: int32(i)}, nil
+    }
+    
+    return nil, fmt.Errorf("What?")
+}
 
 func padding(s string) string {
 	if len(s) == 32 { return s }
