@@ -69,8 +69,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
     	m.height = msg.Height
     }
 
-    // Return the updated model to the Bubble Tea runtime for processing.
-    // Note that we're not returning a command.
+    //fmt.Println(m.computer.registers)
     return m, nil
 }
 
@@ -176,7 +175,7 @@ func step(c *Computer) {
 	c.registers[15] += 32
 
 	op, err := assembler.Decode(ins)
-	fmt.Println(op)
+	// fmt.Println(op)
 	if err != nil {
 		panic("error")
 	}
@@ -189,7 +188,10 @@ func decode(c *Computer, op assembler.Op) {
 	switch v := op.(type) {
 	case assembler.Opp:
 		executeOp(c, v.Op)
-		
+
+	case assembler.Opri:
+		executeOpri(c, v.Op, v.R1, v.I)	
+
 	//case assembler.Oprr:
 		//executeOprr(c, v.Op, v.R1, v.R2)
 	// case assembler.Opri:
@@ -198,7 +200,7 @@ func decode(c *Computer, op assembler.Op) {
 		executeOprrr(c, v.Op, v.R1, v.R2, v.R3)
 
 	default:
-		fmt.Printf("%T\n", v)
+		//fmt.Printf("%T\n", v)
 	}
 }
 
@@ -216,15 +218,35 @@ func executeOpr(c *Computer, op string, ) {
 	}
 }
 
+func executeOpri(c *Computer, op string, r1 string, i int32) {
+	rd := regToI[r1]
+	switch op {
+	case "movri":
+		c.registers[rd] = i
+	}
+}
+
+func executeOprri(c *Computer, op string, r1 string, r2 string, i int32) {
+	rd := regToI[r1]
+	rs1 := regToI[r2]
+
+	switch op {
+	case "subrri":
+		c.registers[rd] = c.registers[rs1] - i
+	case "addrri":
+		c.registers[rd] = c.registers[rs1] + i
+	}
+}
+
 func executeOprrr(c *Computer, op string, r1 string, r2 string, r3 string) {
 	rd := regToI[r1]
 	rs1 := regToI[r2]
 	rs2 := regToI[r3]
 
 	switch op {
-		case "subrrr":
-			c.registers[rd] = c.registers[rs1] - c.registers[rs2]
-		case "addrrr":
-			c.registers[rd] = c.registers[rs1] + c.registers[rs2]
+	case "subrrr":
+		c.registers[rd] = c.registers[rs1] - c.registers[rs2]
+	case "addrrr":
+		c.registers[rd] = c.registers[rs1] + c.registers[rs2]
 	}
 }

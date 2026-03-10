@@ -90,7 +90,8 @@ func flipMap(m map[string]string) map[string]string {
 var registerToB = map[string]string {
 	"r0": "0000",
 	"r1": "0001",
-	"r2": "0010", "r3": "0011",
+	"r2": "0010",
+	"r3": "0011",
 	"r4": "0100",
 	"r5": "0101",
 	"r6": "0110",
@@ -171,42 +172,40 @@ func Decode(s string) (Op, error) {
         // Format: 8-bit op + 4-bit r1 + 4-bit r2
         r1 := bToRegister[s[8:12]]
         r2 := bToRegister[s[12:16]]
-        return Oprr{Op: "mov", R1: r1, R2: r2}, nil
+        return Oprr{Op: opName, R1: r1, R2: r2}, nil
         
     case "movri":
         // Format: 8-bit op + 4-bit r1 + 20-bit immediate
         r1 := bToRegister[s[8:12]]
         i, _ := strconv.ParseInt(s[12:32], 2, 32)
-        return Opri{Op: "mov", R1: r1, I: int32(i)}, nil
+        return Opri{Op: opName, R1: r1, I: int32(i)}, nil
         
     case "addrrr", "subrrr":
         // Format: 8-bit op + 4-bit r1 + 4-bit r2 + 4-bit r3
         // Note: remaining bits might be unused or for future expansion
-        opShort := opName[:3] // "add" or "sub"
         r1 := bToRegister[s[8:12]]
         r2 := bToRegister[s[12:16]]
         r3 := bToRegister[s[16:20]]
-        return Oprrr{Op: opShort, R1: r1, R2: r2, R3: r3}, nil
+        return Oprrr{Op: opName, R1: r1, R2: r2, R3: r3}, nil
         
     case "addrri", "subrri":
         // Format: 8-bit op + 4-bit r1 + 4-bit r2 + 16-bit immediate
-        opShort := opName[:3] // "add" or "sub"
         r1 := bToRegister[s[8:12]]
         r2 := bToRegister[s[12:16]]
         i, _ := strconv.ParseInt(s[16:32], 2, 32)
-        return Oprri{Op: opShort, R1: r1, R2: r2, I: int32(i)}, nil
+        return Oprri{Op: opName, R1: r1, R2: r2, I: int32(i)}, nil
         
     case "cmprr":
         // Format: 8-bit op + 4-bit r1 + 4-bit r2
         r1 := bToRegister[s[8:12]]
         r2 := bToRegister[s[12:16]]
-        return Oprr{Op: "cmp", R1: r1, R2: r2}, nil
+        return Oprr{Op: opName, R1: r1, R2: r2}, nil
         
     case "cmpri":
         // Format: 8-bit op + 4-bit r1 + 20-bit immediate
         r1 := bToRegister[s[8:12]]
         i, _ := strconv.ParseInt(s[12:32], 2, 32)
-        return Opri{Op: "cmp", R1: r1, I: int32(i)}, nil
+        return Opri{Op: opName, R1: r1, I: int32(i)}, nil
     }
     
     return nil, fmt.Errorf("What?")
