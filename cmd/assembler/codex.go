@@ -135,6 +135,7 @@ var opToB = map[string]string {
 var bToOp = flipMap(opToB)
 
 // i think it was a mistake to encode as a string
+// need to encode as a int32
 func Encode(op Op, labels map[string]int) string {
 	// TODO encode labels 
 	bs := ""

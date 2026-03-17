@@ -192,9 +192,9 @@ func decode(c *Computer, op assembler.Op) {
 	case assembler.Opri:
 		executeOpri(c, v.Op, v.R1, v.I)	
 
-	//case assembler.Oprr:
-		//executeOprr(c, v.Op, v.R1, v.R2)
-	// case assembler.Opri:
+	case assembler.Oprr:
+		executeOprr(c, v.Op, v.R1, v.R2)
+
 	// case assembler.Oprri:
 	case assembler.Oprrr:
 		executeOprrr(c, v.Op, v.R1, v.R2, v.R3)
@@ -215,6 +215,15 @@ func executeOpr(c *Computer, op string, ) {
 	switch op {
 	case "halt":
 		os.Exit(0)
+	}
+}
+
+func executeOprr(c *Computer, op string, r1 string, r2 string) {
+	rs1 := regToI[r1]
+	rs2 := regToI[r2]
+	switch op {
+	case "movrr":
+		c.registers[rs1] = c.registers[rs2]
 	}
 }
 
