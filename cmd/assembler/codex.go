@@ -139,19 +139,20 @@ var opToB = map[string]uint8 {
 
 //var bToOp = flipMap(opToB)
 
-// i think it was a mistake to encode as a string
-// need to encode as a int32
-func Encode(op Op, labels map[string]int) string {
-	// TODO encode labels 
-	bs := ""
+func Encode(op Op, labels map[string]int) uint32 {
 	switch v := op.(type) {
-	case Opp: return padding(opToB[v.Op])
-	case Oprr: return padding(opToB[v.Op + "rr"] + registerToB[v.R1] + registerToB[v.R2])
-	case Opri: return padding(opToB[v.Op + "ri"] + registerToB[v.R1] + iToB20(v.I))
-	case Oprrr: return padding(opToB[v.Op + "rrr"] + registerToB[v.R1] + registerToB[v.R2] + registerToB[v.R3])
-	case Oprri: return padding(opToB[v.Op + "rri"] + registerToB[v.R1] + registerToB[v.R2] + iToB16(v.I))
+	case Opp:
+		return opToB[v.Op]
+	case Oprr:
+		return opToB[v.Op + "rr"] + registerToB[v.R1] + registerToB[v.R2]
+	case Opri:
+		return opToB[v.Op + "ri"] + registerToB[v.R1] + iToB20(v.I)
+	case Oprrr:
+		return opToB[v.Op + "rrr"] + registerToB[v.R1] + registerToB[v.R2] + registerToB[v.R3]
+	case Oprri:
+		return opToB[v.Op + "rri"] + registerToB[v.R1] + registerToB[v.R2] + iToB16(v.I)
 	}
-	return bs 
+	return 0 
 }
 
 func Decode(s string) (Op, error) {
@@ -215,17 +216,6 @@ func Decode(s string) (Op, error) {
     }
     
     return nil, fmt.Errorf("What?")
-}
-
-func padding(s string) string {
-	if len(s) == 32 { return s }
-	if len(s) > 32 { panic("length of instruction is too big")}
-
-	for ; len(s) < 32 ; {
-		s += "0"
-	}
-
-	return s 
 }
 
 func iToB20(n int32) string {
