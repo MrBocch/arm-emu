@@ -78,7 +78,7 @@ func opToS(op Op) string {
 	return ""
 }
 
-func flipMap(m map[string]string) map[string]string {
+func flipMap(m map[string]string) map[string]uint {
 	fm := make(map[string]string)
 	for k, v := range m {
 		fm[v] = k
@@ -87,26 +87,31 @@ func flipMap(m map[string]string) map[string]string {
 	return fm
 }
 
-var registerToB = map[string]string {
-	"r0": "0000",
-	"r1": "0001",
-	"r2": "0010",
-	"r3": "0011",
-	"r4": "0100",
-	"r5": "0101",
-	"r6": "0110",
-	"r7": "0111",
-	"r8": "1000",
-	"r9": "1001",
-	"r10":"1010",
-	"r11":"1011",
-	"r12":"1100",
-	"sp": "1101",
-	"lr": "1110",
-	"pc": "1111",
+var registerToI = map[string]uint8 {
+	"r0": 0,
+	"r1": 1,
+	"r2": 2,
+	"r3": 3,
+	"r4": 4,
+	"r5": 5,
+	"r6": 6,
+	"r7": 7,
+	"r8": 8,
+	"r9": 9,
+	"r10":10,
+	"r11":11,
+	"r12":12,
+	"sp": 13,
+	"lr": 14,
+	"pc": 15,
+}
+var iToRegister = [16]string {
+	"r0", "r1", "r2", "r3", "r4", "r5", "r6",
+	"r7", "r8", "r9", "r10", "r11", "r12",
+	"sp", "lr", "pc",
 }
 
-var bToRegister = flipMap(registerToB)
+//var bToRegister = flipMap(registerToB)
 
 // built in identifiers .WriteString
 
@@ -120,19 +125,19 @@ var bToRegister = flipMap(registerToB)
 // op i
 // op ri (register, imediate)
 // op rr (register, rr)
-var opToB = map[string]string {
-	"halt":  "00000000",
-	"movrr": "00000001",
-	"movri": "00000010",
-	"addrrr":"00000011",
-	"addrri":"00000100",
-	"subrrr":"00000101",
-	"subrri":"00000110",
-	"cmprr" :"00000111",
-	"cmpri" :"00001000",
+var opToB = map[string]uint8 {
+	"halt":  0,
+	"movrr": 1,
+	"movri": 2,
+	"addrrr":3,
+	"addrri":4,
+	"subrrr":5,
+	"subrri":6,
+	"cmprr" :7,
+	"cmpri" :8,
 }
 
-var bToOp = flipMap(opToB)
+//var bToOp = flipMap(opToB)
 
 // i think it was a mistake to encode as a string
 // need to encode as a int32
