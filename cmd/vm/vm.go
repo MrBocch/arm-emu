@@ -11,8 +11,8 @@ import (
 )
 
 type Computer struct {
-	registers []int32
-	mem       string 
+	registers []uint32
+	mem       []uint32 
 }
 
 func padStringRight(s string, size int) string {
