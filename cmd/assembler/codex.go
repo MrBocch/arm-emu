@@ -2,7 +2,6 @@ package assembler
 
 import (
 	"fmt"
-	"strconv"
 )
 
 // go is shit for not having sum types
@@ -10,7 +9,8 @@ type Op interface {
 	isOp()
 }
 
-// halt 
+// halt
+// should i really be storing Op as a string? i wont know what 0000-0001 or 1000-1000 would mean
 type Opp struct {
 	Op string
 }
@@ -20,51 +20,51 @@ func (o Opp) String() string {
 }
 
 // OP, R, R
-type Oprr struct { 
-	Op string 
-	R1 string 
-	R2 string 
+type Oprr struct {
+	Op string
+	R1 uint8
+	R2 uint8
 }
 func (Oprr) isOp() {}
 func (o Oprr) String() string {
-	return fmt.Sprintf("%s %s, %s", o.Op, o.R1, o.R2)
+	return fmt.Sprintf("%s %d, %d", o.Op, o.R1, o.R2)
 }
 
 
 // OP R, I
 type Opri struct {
 	Op string
-	R1 string
+	R1 uint8
 	I  int32
 }
 func (Opri) isOp() {}
 func (o Opri) String() string {
-	return fmt.Sprintf("%s %s, #%d", o.Op, o.R1, o.I)
+	return fmt.Sprintf("%s %d, #%d", o.Op, o.R1, o.I)
 }
 
 
 // OP R, R, I
 type Oprri struct {
 	Op string
-	R1 string
-	R2 string
+	R1 uint8
+	R2 uint8
 	I  int32
 }
 func (Oprri) isOp() {}
 func (o Oprri) String() string {
-	return fmt.Sprintf("%s %s, %s, #%d", o.Op, o.R1, o.R2, o.I)
+	return fmt.Sprintf("%s %d, %d, #%d", o.Op, o.R1, o.R2, o.I)
 }
 
 // OP R, R, R
 type Oprrr struct {
 	Op string
-	R1 string
-	R2 string
-	R3 string
+	R1 uint8
+	R2 uint8
+	R3 uint8
 }
 func (Oprrr) isOp() {}
 func (o Oprrr) String() string {
-	return fmt.Sprintf("%s %s, %s, %s", o.Op, o.R1, o.R2, o.R3)
+	return fmt.Sprintf("%s %d, %d, %d", o.Op, o.R1, o.R2, o.R3)
 }
 
 
@@ -75,19 +75,20 @@ func opToS(op Op) string {
 	case Opri: return "ri"
 	case Oprrr: return "rrr"
 	}
-	return ""
+	panic("something is wrong here")
+	//return ""
 }
 
-func flipMap(m map[string]string) map[string]uint {
+/*func flipMap(m map[string]string) map[string]uint {
 	fm := make(map[string]string)
 	for k, v := range m {
 		fm[v] = k
 	}
 
 	return fm
-}
+	}*/
 
-var registerToI = map[string]uint8 {
+var RegisterToI8 = map[string]uint8 {
 	"r0": 0,
 	"r1": 1,
 	"r2": 2,
@@ -105,7 +106,7 @@ var registerToI = map[string]uint8 {
 	"lr": 14,
 	"pc": 15,
 }
-var iToRegister = [16]string {
+var IToRegister = [16]string {
 	"r0", "r1", "r2", "r3", "r4", "r5", "r6",
 	"r7", "r8", "r9", "r10", "r11", "r12",
 	"sp", "lr", "pc",
@@ -139,7 +140,10 @@ var opToB = map[string]uint8 {
 
 //var bToOp = flipMap(opToB)
 
-func Encode(op Op, labels map[string]int) uint32 {
+func Encode(op Op, labels map[string]uint32) uint32 {
+	// what will i do about labels?
+	return 0
+	/*
 	switch v := op.(type) {
 	case Opp:
 		return opToB[v.Op]
@@ -152,41 +156,43 @@ func Encode(op Op, labels map[string]int) uint32 {
 	case Oprri:
 		return opToB[v.Op + "rri"] + registerToB[v.R1] + registerToB[v.R2] + iToB16(v.I)
 	}
-	return 0 
+	return 0
+	*/
 }
 
+/* first worry about encoding
 func Decode(s string) (Op, error) {
     // Ensure we have exactly 32 bits
     if len(s) != 32 {
 		panic("Did not receive 32bit op")
     }
-    
+
     // Extract opcode (first 8 bits)
     opcode := s[:8]
-    
+
     // Find operation name
     opName, exists := bToOp[opcode]
     if !exists {
     	panic(fmt.Errorf("Dont recognize [%s] instruction", opcode))
     }
-    
+
     // Decode based on operation type
     switch opName {
     case "halt":
         return Opp{Op: "halt"}, nil
-        
+
     case "movrr":
         // Format: 8-bit op + 4-bit r1 + 4-bit r2
         r1 := bToRegister[s[8:12]]
         r2 := bToRegister[s[12:16]]
         return Oprr{Op: opName, R1: r1, R2: r2}, nil
-        
+
     case "movri":
         // Format: 8-bit op + 4-bit r1 + 20-bit immediate
         r1 := bToRegister[s[8:12]]
         i, _ := strconv.ParseInt(s[12:32], 2, 32)
         return Opri{Op: opName, R1: r1, I: int32(i)}, nil
-        
+
     case "addrrr", "subrrr":
         // Format: 8-bit op + 4-bit r1 + 4-bit r2 + 4-bit r3
         // Note: remaining bits might be unused or for future expansion
@@ -194,60 +200,27 @@ func Decode(s string) (Op, error) {
         r2 := bToRegister[s[12:16]]
         r3 := bToRegister[s[16:20]]
         return Oprrr{Op: opName, R1: r1, R2: r2, R3: r3}, nil
-        
+
     case "addrri", "subrri":
         // Format: 8-bit op + 4-bit r1 + 4-bit r2 + 16-bit immediate
         r1 := bToRegister[s[8:12]]
         r2 := bToRegister[s[12:16]]
         i, _ := strconv.ParseInt(s[16:32], 2, 32)
         return Oprri{Op: opName, R1: r1, R2: r2, I: int32(i)}, nil
-        
+
     case "cmprr":
         // Format: 8-bit op + 4-bit r1 + 4-bit r2
         r1 := bToRegister[s[8:12]]
         r2 := bToRegister[s[12:16]]
         return Oprr{Op: opName, R1: r1, R2: r2}, nil
-        
+
     case "cmpri":
         // Format: 8-bit op + 4-bit r1 + 20-bit immediate
         r1 := bToRegister[s[8:12]]
         i, _ := strconv.ParseInt(s[12:32], 2, 32)
         return Opri{Op: opName, R1: r1, I: int32(i)}, nil
     }
-    
+
     return nil, fmt.Errorf("What?")
 }
-
-func iToB20(n int32) string {
-	const (
-		width = 20
-		max   = (1 << (width - 1)) - 1  //  524287
-		min   = -(1 << (width - 1))     // -524288
-	)
-
-	if n > max || n < min {
-		panic("immediate out of 20-bit signed range")
-	}
-
-	// mask to 20 bits (two's complement)
-	u := uint32(n) & ((1 << width) - 1)
-
-	return fmt.Sprintf("%020b", u)
-}
-
-func iToB16(n int32) string {
-	const (
-		width = 16
-		max   = (1 << (width - 1)) - 1  //  32767
-		min   = -(1 << (width - 1))     // -32768
-	)
-
-	if n > max || n < min {
-		panic("immediate out of 16-bit signed range")
-	}
-
-	// mask to 16 bits (two's complement)
-	u := uint32(n) & ((1 << width) - 1)
-
-	return fmt.Sprintf("%016b", u)
-}
+*/

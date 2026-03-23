@@ -3,20 +3,20 @@ package assembler
 import (
     "fmt"
     "strings"
-	"strconv"
+    "strconv"
 )
 
-func getLabels(tokens []Token) map[string]int {
-	// what about directives? 
+func getLabels(tokens []Token) map[string]uint32 {
+	// what about directives?
 	idx := 0
 	var line [] Token
-	labels := make(map[string]int)
+	labels := make(map[string]uint32)
 	for _, t := range tokens {
 		if t.Kind != NewLine { line = append(line, t); continue }
 
 		if line[0].Kind == Identifier &&
 		   line[1].Kind == Colon {
-		   	labels[line[0].Lexeme] = idx
+		   	labels[line[0].Lexeme] = uint32(idx)
 	   } else {
 	   		idx += 4
 	   }
@@ -26,48 +26,46 @@ func getLabels(tokens []Token) map[string]int {
 	return labels
 }
 
-func Analyze(tokens []Token) (string, error) {
+func Analyze(tokens []Token) ([]uint32, error) {
 	var line [] Token
-	// haveErr := false 
+	// haveErr := false
 	userLabels := getLabels(tokens)
 	// fmt.Println(userLabels)
 	// directives should prob check for them just like labels, and
-	// store the action that the program must load into memory once running vm 
+	// store the action that the program must load into memory once running vm
 
-	hasErrors := false 
-	s := ""
+	hasErrors := false
+	var mem []uint32
 	for _, t := range tokens {
 		if t.Kind != NewLine { line = append(line, t); continue }
 
-		op, err := getStructure(line)
+		op, err := getStructure(line, userLabels)
 		if err != nil {
 			fmt.Printf("[ERROR LINE %v]\n", line[0].Line)
 			fmt.Println(err)
 			hasErrors = true
 		}
-		
+
 		if !hasErrors {
-			s += Encode(op, userLabels)
+			mem = append(mem, Encode(op, userLabels))
 		}
-		
-		// what is this doing? 
+
+		// what is this doing?
 		line = line[:0]
 	}
 
-	if hasErrors {
-		return "", fmt.Errorf("Wont encode due to error")
-	}
-
-	return s, nil
-
+	if hasErrors { return nil, fmt.Errorf("Wont encode due to error") }
+	return mem, nil
 }
 
-func getStructure(line []Token) (Op, error) {
+
+func getStructure(line []Token, labels map[string]uint32) (Op, error) {
 	if len(line) == 0 { return nil, fmt.Errorf("Empty instruction") }
-	
+
 	switch strings.ToLower(line[0].Lexeme) {
 	case "mov":
-		return checkMov(line) 
+		return checkMov(line, labels)
+	/*
 	case "add":
 		return checkAdd(line)
 	case "sub":
@@ -78,8 +76,8 @@ func getStructure(line []Token) (Op, error) {
 		return checkCmp(line)
 	}
 	return nil, fmt.Errorf("invalid instruction instruction")
+	*/
 	/*
-
 	case "b":
 		return checkB(line)
 	case "blt":
@@ -100,26 +98,30 @@ func getStructure(line []Token) (Op, error) {
 	default:
 		// check for identifier
 		return checkIdentifier(line)
-	}
-	return false 
 	*/
+	}
+	return nil, fmt.Errorf("error getting structure")
 }
 
 func isNumber(tok Token) bool {
-	// should I also check if I can convert the lexeme to a actual value? 
+	// should I also check if I can convert the lexeme to a actual value?
+	// that can fit within the thing?
 	return tok.Kind == Number || tok.Kind == HexNumber || tok.Kind == BitNumber
 }
-
 
 // mov r0, r1
 // mov r0, #(number)
 // mov r0, #msg // meaning mov r0, the beggining of msg assembly directive
-func checkMov(line []Token) (Op, error) {
+func checkMov(line []Token, labels map[string]uint32) (Op, error) {
 	// TODO: negative numbers
 	switch len(line) {
 	case 4:
 		if line[1].Kind == Register && line[2].Kind == Comma && line[3].Kind == Register {
-			return Oprr{ Op: "mov", R1: lower(line[1].Lexeme), R2: lower(line[3].Lexeme),}, nil
+			return Oprr{
+				Op: "movrr",
+				R1: RegisterToI8[lower(line[1].Lexeme)],
+				R2: RegisterToI8[lower(line[3].Lexeme)],
+			}, nil
 		}
 
 	case 5:
@@ -127,19 +129,24 @@ func checkMov(line []Token) (Op, error) {
 			// TODO: parse immediate or identifier?
 			var imm int32
 			if isNumber(line[4]) { imm = parseImm(line[4]) } else { panic("parse identifier within mov") }
-			return Opri{ Op: "mov", R1: lower(line[1].Lexeme), I:  imm,}, nil
+			return Opri{
+				Op: "movri",
+				R1: RegisterToI8[lower(line[1].Lexeme)],
+				I:  imm,
+			}, nil
 		}
 	}
 
 	return nil, fmt.Errorf("invalid mov instruction")
 }
 
+/*
 // add r0, r1, r2
 // add r0, r1, #0b11
 // add r0, r1, #3
 // add r0, r1, #0xA
 func checkAdd(line []Token) (Op, error) {
-	// TODO negative numbers 
+	// TODO negative numbers
 	switch len(line){
 	case 6:
 		if line[1].Kind == Register && line[2].Kind == Comma && line[3].Kind == Register && line[4].Kind == Comma && line[5].Kind == Register {
@@ -158,7 +165,7 @@ func checkAdd(line []Token) (Op, error) {
 // sub r0, r1, r2
 // sub r0, r1, #(number)
 func checkSub(line []Token) (Op, error) {
-	// TODO negative numbers 
+	// TODO negative numbers
 	switch len(line) {
 	case 6:
 		if line[1].Kind == Register && line[2].Kind == Comma && line[3].Kind == Register && line[4].Kind == Comma && line[5].Kind == Register {
@@ -195,7 +202,7 @@ func checkCmp(line []Token) (Op, error) {
 	return nil, fmt.Errorf("invalid cmp instruction")
 }
 
-// halt 
+// halt
 func checkHalt(line []Token) (Op, error) {
 	if len(line) == 1 && lower(line[0].Lexeme) == "halt" {
 		return Opp{ Op: "halt", }, nil
@@ -254,7 +261,7 @@ func checkAnd(line []Token) bool {
 
 // address must be divisable by 4
 // str r0, .Thing
-// str r0, number 
+// str r0, number
 // str r0, [r1]
 // str r0, [r1,r2]
 // str r0, [r1 + r2]
@@ -274,12 +281,12 @@ func checkStr(line []Token) bool {
 			   line[6].Kind == Register &&
 			   line[7].Kind == RightBracket
 	}
-	return false 
+	return false
 }
 
 // address must be divisable by 4
 // ldr r0, .Thing
-// ldr r0, number 
+// ldr r0, number
 // ldr r0, [r1]
 // ldr r0, [r1 , r2]
 // ldr r0, [r1 + r2]
@@ -306,13 +313,13 @@ func checkLdr(line []Token) bool {
 // userIdentifier:
 func checkIdentifier(line []Token) bool {
 	// TODO check for user defined/built in identifiers
-	// what about assembly directives? 
+	// what about assembly directives?
 	return line[0].Kind == Identifier && line[1].Kind == Colon
 }
 
 
 func printError(line []Token) {
-	// TODO: how about more helpful error messages? 
+	// TODO: how about more helpful error messages?
 	fmt.Printf("[ERROR]\n[LINE: %v] ", line[0].Line)
 	for _, t := range line {
 		fmt.Printf("%v ", t.Lexeme)
@@ -320,6 +327,7 @@ func printError(line []Token) {
 	fmt.Println()
 }
 
+*/
 func lower(s string) string {
 	return strings.ToLower(s)
 }
@@ -332,17 +340,14 @@ func parseImm(tok Token) int32 {
 	case BitNumber:
 		base = 2
 		value = tok.Lexeme[2:] // strip "0b"
-
 	case HexNumber:
 		base = 16
 		value = tok.Lexeme[2:] // strip "0x"
-
 	case Number:
 		base = 10
 		value = tok.Lexeme
-
 	default:
-		panic("unexpected token type for immediate")
+		panic("unexpected token type for immediate (label?)")
 	}
 
 	n, err := strconv.ParseInt(value, base, 32)

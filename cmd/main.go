@@ -4,16 +4,8 @@ import (
 	"os"
 	"fmt"
 	"github.com/MrBocch/arm-emu/cmd/assembler"
-	"github.com/MrBocch/arm-emu/cmd/vm"
-	//tea "github.com/charmbracelet/bubbletea"
-	//"github.com/charmbracelet/lipgloss"
+	// "github.com/MrBocch/arm-emu/cmd/vm"
 )
-
-//type model struct {}
-//func initialModel() model {return model{}}
-// func (m model) Init() tea.Cmd {return nil}
-// func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {return m, nil}
-//func (m model) View() string {return style.Render(s)}
 
 func main(){
 	if len(os.Args) == 1 {
@@ -32,13 +24,14 @@ func main(){
 	tokens := assembler.Lex(string(file))
 	// assembler.PrintTokens(tokens)
 
-	sbin, err := assembler.Analyze(tokens)
+	bin, err := assembler.Analyze(tokens)
 	if err != nil {
 		fmt.Println("Fix error: ", err)
 		os.Exit(1)
 	}
 
-
-	vm.Run(sbin)
+	fmt.Println("encoded: ")
+	fmt.Println(bin)
+	// vm.Run(bin)
 
 }

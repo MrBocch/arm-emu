@@ -6,40 +6,30 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"github.com/charmbracelet/lipgloss"
 	// "github.com/charmbracelet/bubbles"
-	"strings"
 	"github.com/MrBocch/arm-emu/cmd/assembler"
 )
 
 type Computer struct {
 	registers []uint32
-	mem       []uint32 
+	mem       []uint32
 }
 
-func padStringRight(s string, size int) string {
-	if len(s) >= size {
-		panic("Not enough memory to write code")
-	}
-
-	return s + strings.Repeat("0", size-len(s))
-}
-
-func initComputer(register int, memory string) Computer {
-	padMemory := padStringRight(memory, 32_000)
+func initComputer(registerCount int, memory []uint32) Computer {
 	return Computer {
-		registers: make([]int32, register),
-		mem      : padMemory,
+		registers: make([]uint32, registerCount),
+		mem      : memory,
 	}
 }
 
 type model struct {
 	// terminal screen
-	width   int 
-	height  int 
+	width   int
+	height  int
 
-	computer Computer 
+	computer Computer
 }
 
-func initialModel(memory string) model {
+func initialModel(memory []uint32) model {
 	cpu := initComputer(16, memory)
 	return model {
 		computer: cpu,
@@ -98,7 +88,7 @@ func (m model) View() tea.View {
 	return tea.NewView(centered)
 }
 
-func renderRegisters(reg []int32) string {
+func renderRegisters(reg []uint32) string {
 	const (
 		labelWidth = 12
 		valueWidth = 10
@@ -141,7 +131,7 @@ func renderRegisters(reg []int32) string {
 	return lipgloss.JoinVertical(lipgloss.Left, lines...)
 }
 
-func Run(mem string) {
+func Run(mem []uint32) {
     p := tea.NewProgram(initialModel(mem))
     if _, err := p.Run(); err != nil {
         fmt.Printf("Alas, there's been an error: %v", err)
@@ -167,7 +157,7 @@ var regToI = map[string]int {
 	"lr": 14,
 	"pc": 15,
 }
- 
+
 func step(c *Computer) {
 	pc := c.registers[15]
 	// fetch
@@ -190,7 +180,7 @@ func decode(c *Computer, op assembler.Op) {
 		executeOp(c, v.Op)
 
 	case assembler.Opri:
-		executeOpri(c, v.Op, v.R1, v.I)	
+		executeOpri(c, v.Op, v.R1, v.I)
 
 	case assembler.Oprr:
 		executeOprr(c, v.Op, v.R1, v.R2)
