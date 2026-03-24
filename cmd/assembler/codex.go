@@ -120,12 +120,16 @@ var IToRegister = [16]string {
 // for knowing instruction type?
 // <type> <op>
 // type ::= OP | OP i | OP r i | OP r i i | OP r r | OP r r i
+// [ OP 8bits ]
+// [ Reg 4bits ]
+// [ Imm whatever is left of size ]
 
 // 8 bit long instructions?
-// op
-// op i
-// op ri (register, imediate)
-// op rr (register, rr)
+// op     (op)
+// op i   (op imm)
+// op ri  (op reg, imm)
+// op rr  (op reg, reg)
+// op rri (op reg, reg, imm)
 var opToB = map[string]uint8 {
 	"halt":  0,
 	"movrr": 1,
@@ -142,23 +146,22 @@ var opToB = map[string]uint8 {
 
 func Encode(op Op, labels map[string]uint32) uint32 {
 	// what will i do about labels?
-	return 0
-	/*
 	switch v := op.(type) {
 	case Opp:
-		return opToB[v.Op]
+		// return opToB[v.Op]
 	case Oprr:
-		return opToB[v.Op + "rr"] + registerToB[v.R1] + registerToB[v.R2]
+		// return opToB[v.Op + "rr"] + registerToB[v.R1] + registerToB[v.R2]
 	case Opri:
-		return opToB[v.Op + "ri"] + registerToB[v.R1] + iToB20(v.I)
+		// return opToB[v.Op + "ri"] + registerToB[v.R1] + iToB20(v.I)
 	case Oprrr:
-		return opToB[v.Op + "rrr"] + registerToB[v.R1] + registerToB[v.R2] + registerToB[v.R3]
+		// return opToB[v.Op + "rrr"] + registerToB[v.R1] + registerToB[v.R2] + registerToB[v.R3]
 	case Oprri:
-		return opToB[v.Op + "rri"] + registerToB[v.R1] + registerToB[v.R2] + iToB16(v.I)
+		// return opToB[v.Op + "rri"] + registerToB[v.R1] + registerToB[v.R2] + iToB16(v.I)
 	}
-	return 0
-	*/
+	panic("error?")
 }
+
+
 
 /* first worry about encoding
 func Decode(s string) (Op, error) {
@@ -224,3 +227,25 @@ func Decode(s string) (Op, error) {
     return nil, fmt.Errorf("What?")
 }
 */
+
+// for encoding/decoding
+const (
+    opShift = 28
+    r1Shift = 24
+    r2Shift = 20
+    r3Shift = 16
+
+    opMask  = 0xF
+    regMask = 0xF
+    imm24Mask = 0x00FFFFFF
+    imm20Mask = 0x000FFFFF
+    imm16Mask = 0x0000FFFF
+)
+
+func pack(op uint8, r1 uint8, r2 uint8, r3 uint8, imm uint32) uint32 {
+    return uint32(op)  << opShift |
+           uint32(r1) << r1Shift |
+           uint32(r2) << r2Shift |
+           uint32(r3) << r3Shift |
+           imm
+}
