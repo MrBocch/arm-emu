@@ -31,7 +31,24 @@ func main(){
 	}
 
 	fmt.Println("encoded: ")
-	fmt.Println(bin)
+	printBinOp(bin)
 	// vm.Run(bin)
 
+}
+
+func printBinary(bin []uint32) {
+	for _, instr := range bin {
+	    b := fmt.Sprintf("%032b", instr)
+	    fmt.Printf("%s %s %s %s %s\n", b[0:8], b[8:12], b[12:16], b[16:20], b[20:32])
+	}
+}
+
+func printBinOp(bin []uint32) {
+	for _, istr := range(bin){
+		pack, err := (assembler.Decode(istr))
+		if err != nil {
+			panic("error on decoding")
+		}
+		fmt.Println(pack)
+	}
 }

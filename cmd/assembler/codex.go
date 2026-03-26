@@ -68,6 +68,7 @@ func (o Oprrr) String() string {
 }
 
 
+/* prob jsut have analyzer encode/decode this in
 func opToS(op Op) string {
 	switch op.(type) {
 	case Opp: return ""
@@ -78,15 +79,7 @@ func opToS(op Op) string {
 	panic("something is wrong here")
 	//return ""
 }
-
-/*func flipMap(m map[string]string) map[string]uint {
-	fm := make(map[string]string)
-	for k, v := range m {
-		fm[v] = k
-	}
-
-	return fm
-	}*/
+*/
 
 var RegisterToI8 = map[string]uint8 {
 	"r0": 0,
@@ -111,8 +104,6 @@ var IToRegister = [16]string {
 	"r7", "r8", "r9", "r10", "r11", "r12",
 	"sp", "lr", "pc",
 }
-
-//var bToRegister = flipMap(registerToB)
 
 // built in identifiers .WriteString
 
@@ -141,61 +132,55 @@ var opToB = map[string]uint8 {
 	"cmprr" :7,
 	"cmpri" :8,
 }
-
-//var bToOp = flipMap(opToB)
+func flipMap[K comparable, V comparable](m map[K]V) map[V]K {
+    flipped := make(map[V]K)
+    for k, v := range m {
+        flipped[v] = k
+    }
+    return flipped
+}
+var bToOp = flipMap(opToB)
 
 func Encode(op Op, labels map[string]uint32) uint32 {
-	// what will i do about labels?
+	// what about immediates?
 	switch v := op.(type) {
 	case Opp:
-		// return opToB[v.Op]
+		return packOp(opToB[v.Op])
 	case Oprr:
-		// return opToB[v.Op + "rr"] + registerToB[v.R1] + registerToB[v.R2]
+		return packOprr(opToB[v.Op], v.R1, v.R2)
 	case Opri:
-		// return opToB[v.Op + "ri"] + registerToB[v.R1] + iToB20(v.I)
+		return packOpri(opToB[v.Op], v.R1, uint32(v.I))
 	case Oprrr:
-		// return opToB[v.Op + "rrr"] + registerToB[v.R1] + registerToB[v.R2] + registerToB[v.R3]
+		return packOprrr(opToB[v.Op], v.R1, v.R2, v.R3)
 	case Oprri:
-		// return opToB[v.Op + "rri"] + registerToB[v.R1] + registerToB[v.R2] + iToB16(v.I)
+		return packOprri(opToB[v.Op], v.R1, v.R2, uint32(v.I))
 	}
-	panic("error?")
+	panic("unknown op type")
 }
 
-
-
-/* first worry about encoding
-func Decode(s string) (Op, error) {
-    // Ensure we have exactly 32 bits
-    if len(s) != 32 {
-		panic("Did not receive 32bit op")
-    }
-
-    // Extract opcode (first 8 bits)
-    opcode := s[:8]
+func Decode(bin uint32) (Op, error) {
+    op := uint8((bin >> 24) & 0xFF)
 
     // Find operation name
-    opName, exists := bToOp[opcode]
+    opName, exists := bToOp[op]
     if !exists {
-    	panic(fmt.Errorf("Dont recognize [%s] instruction", opcode))
+    	panic(fmt.Errorf("Dont recognize [%d] instruction", op))
     }
 
     // Decode based on operation type
     switch opName {
     case "halt":
-        return Opp{Op: "halt"}, nil
-
+    	return Opp{ Op : "halt", }, nil
     case "movrr":
-        // Format: 8-bit op + 4-bit r1 + 4-bit r2
-        r1 := bToRegister[s[8:12]]
-        r2 := bToRegister[s[12:16]]
-        return Oprr{Op: opName, R1: r1, R2: r2}, nil
-
+        r1 := uint8((bin >> 20) & 0xF)
+        r2 := uint8((bin >> 16) & 0xF)
+        return Oprr{Op: "movrr", R1: r1, R2: r2}, nil
     case "movri":
-        // Format: 8-bit op + 4-bit r1 + 20-bit immediate
-        r1 := bToRegister[s[8:12]]
-        i, _ := strconv.ParseInt(s[12:32], 2, 32)
-        return Opri{Op: opName, R1: r1, I: int32(i)}, nil
-
+        r1 := uint8((bin >> 20) & 0xF)
+        imm := int32(bin & 0x000FFFFF)
+        return Opri{Op: "movri", R1: r1, I: imm}, nil
+    }
+    /*
     case "addrrr", "subrrr":
         // Format: 8-bit op + 4-bit r1 + 4-bit r2 + 4-bit r3
         // Note: remaining bits might be unused or for future expansion
@@ -223,29 +208,62 @@ func Decode(s string) (Op, error) {
         i, _ := strconv.ParseInt(s[12:32], 2, 32)
         return Opri{Op: opName, R1: r1, I: int32(i)}, nil
     }
-
-    return nil, fmt.Errorf("What?")
+    */
+    return nil, fmt.Errorf("error, (not implemented yet?)")
 }
-*/
 
 // for encoding/decoding
-const (
-    opShift = 28
-    r1Shift = 24
-    r2Shift = 20
-    r3Shift = 16
+func packOp(op uint8) uint32 {
+	// op is 8 bit wide (32-8)
+    return uint32(op) << 24
+}
 
-    opMask  = 0xF
-    regMask = 0xF
-    imm24Mask = 0x00FFFFFF
-    imm20Mask = 0x000FFFFF
-    imm16Mask = 0x0000FFFF
-)
+func packOpi(op uint8, imm uint32) uint32 {
+    res := uint32(0)
+    res |= uint32(op) << 24
+    res |= imm & 0x00FFFFFF // 24-bit immediate, bits 0-23
+    return res
+}
 
-func pack(op uint8, r1 uint8, r2 uint8, r3 uint8, imm uint32) uint32 {
-    return uint32(op)  << opShift |
-           uint32(r1) << r1Shift |
-           uint32(r2) << r2Shift |
-           uint32(r3) << r3Shift |
-           imm
+func packOpr(op uint8, r1 int8) uint32 {
+	// op 8 , reg 4
+	res := uint32(0)
+	res |= uint32(op) << 24
+	res |= uint32(r1) << 20
+	return res
+}
+
+func packOprr(op uint8, r1 uint8, r2 uint8) uint32 {
+	res := uint32(0)
+	res |= uint32(op) << 24
+	res |= uint32(r1) << 20
+	res |= uint32(r2) << 16
+	return res
+}
+
+func packOpri(op uint8, r1 uint8, imm uint32) uint32 {
+    res := uint32(0)
+    res |= uint32(op) << 24
+    res |= uint32(r1) << 20
+    res |= imm & 0x000FFFFF // 20-bit immediate, bits 0-19
+    return res
+}
+
+func packOprri(op uint8, r1 uint8, r2 uint8, imm uint32) uint32 {
+    res := uint32(0)
+    res |= uint32(op) << 24
+    res |= uint32(r1) << 20
+    res |= uint32(r2) << 16
+    res |= imm & 0x0000FFFF // 16-bit immediate, bits 0-15
+    return res
+}
+
+func packOprrr(op uint8, r1 uint8, r2 uint8, r3 uint8) uint32 {
+    res := uint32(0)
+    res |= uint32(op) << 24
+    res |= uint32(r1) << 20
+    res |= uint32(r2) << 16
+    res |= uint32(r3) << 12
+
+    return res
 }

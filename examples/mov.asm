@@ -5,5 +5,6 @@ mov r5, #0x3
 
 mov r12, #999
 mov r0, r12
+halt
 // incorrect
 //mov r0, [address]

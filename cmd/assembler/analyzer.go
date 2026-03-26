@@ -63,6 +63,8 @@ func getStructure(line []Token, labels map[string]uint32) (Op, error) {
 	if len(line) == 0 { return nil, fmt.Errorf("Empty instruction") }
 
 	switch strings.ToLower(line[0].Lexeme) {
+	case "halt":
+		return checkHalt(line)
 	case "mov":
 		return checkMov(line, labels)
 	/*
@@ -107,6 +109,14 @@ func isNumber(tok Token) bool {
 	// should I also check if I can convert the lexeme to a actual value?
 	// that can fit within the thing?
 	return tok.Kind == Number || tok.Kind == HexNumber || tok.Kind == BitNumber
+}
+
+func checkHalt(line []Token) (Op, error) {
+	if len(line) == 1 {
+		return Opp{ Op: "halt", }, nil
+	}
+
+	return nil, fmt.Errorf("Error on halt instruction")
 }
 
 // mov r0, r1

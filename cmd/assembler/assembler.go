@@ -11,7 +11,7 @@ func Lex(code string) []Token {
 	// (normal | comment)
 	state := "normal"
 	line := 1
-	var tokens []Token 
+	var tokens []Token
 	currLexeme := ""
 
     for i := 0; i < len(code); i++ {
@@ -23,14 +23,14 @@ func Lex(code string) []Token {
 					panic(fmt.Sprintf("[%d]: Can't nest multiline comments", line))
 				}
 				if code[j] == '*' && code[j+1] == '/' {
-					i = j + 2 
+					i = j + 2
 					state = "normal"
-					continue 
+					continue
 				}
 			}
 			if state != "normal" { panic(fmt.Sprintf("[%d]: unclosed comment", start)) }
-		} 
-		
+		}
+
       	byte := code[i]
       	switch byte {
        	case ';':
@@ -41,7 +41,7 @@ func Lex(code string) []Token {
       		currLexeme = ""
        	    for j := i+1; code[j] != '\n' && j < len(code); j++ { i = j }
         case '/':
-        	if i + 1 >= len(code) { panic("error '/''") } // should have actual system for reporting errors 
+        	if i + 1 >= len(code) { panic("error '/''") } // should have actual system for reporting errors
           	if code[i+1] == '/' {
           	    if currLexeme != "" {
           	    	ttype := identifyLex(currLexeme)
@@ -49,7 +49,7 @@ func Lex(code string) []Token {
           	    }
           	    currLexeme = ""
           		for j := i+1; code[j] != '\n' && j < len(code); j++ { i = j }
-          		continue 
+          		continue
           	}
           	if code[i+1] == '*' {
           	    if currLexeme != "" {
@@ -74,7 +74,7 @@ func Lex(code string) []Token {
        		}
        		if tokens[len(tokens)-1].Kind == NewLine {
        			line += 1
-       			continue 
+       			continue
        		}
       		addToken(&tokens, NewLine, "\\n", line)
       		line += 1
@@ -103,14 +103,14 @@ func Lex(code string) []Token {
 				if code[j] == '"' { break }
 				stringLiteral += string(code[j])
 			}
-        	if i + 1 >= len(code) { panic("unclosed string") } // should have actual system for reporting errors 
+        	if i + 1 >= len(code) { panic("unclosed string") } // should have actual system for reporting errors
 			addToken(&tokens, StringLiteral, stringLiteral, line)
 
 		default:
-			currLexeme += string(byte) 
+			currLexeme += string(byte)
        		if false { fmt.Printf("%c", byte) }
        	}
-       	
+
     }
 
 	return tokens
@@ -123,7 +123,7 @@ func addToken(tokens *[]Token, kind TType, lexeme string, line int) {
 func PrintTokens(tokens []Token) {
 	typetoString := func (token Token) string {
 		switch token.Kind {
-		case Identifier: 	
+		case Identifier:
 			return "IDENTIFIER"
 		case Number:
 			return "NUMBER"
@@ -164,7 +164,7 @@ func PrintTokens(tokens []Token) {
 	for _, t := range tokens {
 		k := typetoString(t)
 		l := t.Line
-		lex := t.Lexeme 
+		lex := t.Lexeme
 		if t.Kind == StringLiteral {
 			fmt.Println("* STRING LITERAL")
 			fmt.Printf("* [%s]", lex)
@@ -172,7 +172,7 @@ func PrintTokens(tokens []Token) {
 		} else {
 			if lex != "" { fmt.Printf("(%s %s %d)\n", k, lex, l) }
 			if lex == "" { fmt.Printf("(%s %d)\n", k, l) }
-			if k == "NEWLINE" { fmt.Println() }		
+			if k == "NEWLINE" { fmt.Println() }
 		}
 
 	}
@@ -190,7 +190,7 @@ func tokenTypeFromByte(b byte) TType {
     // opening and closing braces
     case '[':
         return LeftBracket
-    case ']': 
+    case ']':
         return RightBracket
     case '{':
     	return LeftCurly
@@ -220,16 +220,16 @@ func isDigit(s byte) bool {
 	switch s {
 	case '0','1','2', '3','4','5','6','7','8','9': { return true }
 	}
-	return false 
+	return false
 }
 
 func isOp(op string) bool {
 	switch strings.ToLower(op) {
 	// its bad to combinar code + data, get this from somewhere else, dont want to
-	// track several lists of ops 
+	// track several lists of ops
 	case "mov", "add", "sub", "str","ldr","cmp", "beq", "b", "bgt", "push", "pop", "bl", "adds","halt", "ret": { return true }
 	}
-	return false 
+	return false
 }
 
 func isRegister(reg string) bool {
@@ -237,5 +237,5 @@ func isRegister(reg string) bool {
 	case "r0","r1","r2","r3","r4", "r5", "r6", "r7","r8", "r9", "r10", "r11", "r12",
 		 "r13","r14","r15","lr","sp","pc": { return true }
 	}
-	return false 
+	return false
 }
