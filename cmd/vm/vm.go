@@ -30,6 +30,8 @@ type model struct {
 }
 
 func initialModel(memory []uint32) model {
+	if len(memory) > 4_000 { panic("hit memory?") }
+
 	cpu := initComputer(16, memory)
 	return model {
 		computer: cpu,
@@ -157,24 +159,28 @@ var regToI = map[string]int {
 	"lr": 14,
 	"pc": 15,
 }
+var PC = 15
 
 func step(c *Computer) {
-	pc := c.registers[15]
 	// fetch
-	ins := c.mem[pc:pc+32]
-	c.registers[15] += 32
+	// what if pannics? here?
+	addr := c.registers[PC]
+	instr := c.mem[addr]
+	c.registers[PC] += 1
 
-	op, err := assembler.Decode(ins)
+
+	op, err := assembler.Decode(instr)
 	// fmt.Println(op)
 	if err != nil {
-		panic("error")
+		panic("error at runtime")
 	}
 
 	 decode(c, op)
 }
 
+
+
 func decode(c *Computer, op assembler.Op) {
-	// switch v := op.(type) {
 	switch v := op.(type) {
 	case assembler.Opp:
 		executeOp(c, v.Op)
@@ -190,7 +196,7 @@ func decode(c *Computer, op assembler.Op) {
 		executeOprrr(c, v.Op, v.R1, v.R2, v.R3)
 
 	default:
-		//fmt.Printf("%T\n", v)
+		panic("runtime error, unknown instruction")
 	}
 }
 
@@ -198,54 +204,32 @@ func executeOp(c *Computer, op string) {
 	switch op {
 	case "halt":
 		os.Exit(0)
+	default:
+		panic("havent implemented (this instruction) yet?")
 	}
 }
 
-func executeOpr(c *Computer, op string, ) {
-	switch op {
-	case "halt":
-		os.Exit(0)
-	}
-}
-
-func executeOprr(c *Computer, op string, r1 string, r2 string) {
-	rs1 := regToI[r1]
-	rs2 := regToI[r2]
-	switch op {
-	case "movrr":
-		c.registers[rs1] = c.registers[rs2]
-	}
-}
-
-func executeOpri(c *Computer, op string, r1 string, i int32) {
-	rd := regToI[r1]
+func executeOpri(c *Computer, op string, r1 uint8, i int32) {
 	switch op {
 	case "movri":
-		c.registers[rd] = i
+		c.registers[r1] = uint32(i)
+	default:
+		panic("havent implemented (this instruction) yet?")
 	}
 }
 
-func executeOprri(c *Computer, op string, r1 string, r2 string, i int32) {
-	rd := regToI[r1]
-	rs1 := regToI[r2]
-
+func executeOprr(c *Computer, op string, r1 uint8, r2 uint8) {
 	switch op {
-	case "subrri":
-		c.registers[rd] = c.registers[rs1] - i
-	case "addrri":
-		c.registers[rd] = c.registers[rs1] + i
+	case "movrr":
+		c.registers[r1] = c.registers[r2]
+	default:
+		panic("havent implemented (this instruction) yet?")
 	}
 }
 
-func executeOprrr(c *Computer, op string, r1 string, r2 string, r3 string) {
-	rd := regToI[r1]
-	rs1 := regToI[r2]
-	rs2 := regToI[r3]
-
+func executeOprrr(c *Computer, op string, r1 uint8, r2 uint8, r3 uint8) {
 	switch op {
-	case "subrrr":
-		c.registers[rd] = c.registers[rs1] - c.registers[rs2]
-	case "addrrr":
-		c.registers[rd] = c.registers[rs1] + c.registers[rs2]
+	default:
+		panic("havent implemented (this instruction) yet?")
 	}
 }

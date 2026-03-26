@@ -4,7 +4,7 @@ import (
 	"os"
 	"fmt"
 	"github.com/MrBocch/arm-emu/cmd/assembler"
-	// "github.com/MrBocch/arm-emu/cmd/vm"
+	"github.com/MrBocch/arm-emu/cmd/vm"
 )
 
 func main(){
@@ -30,9 +30,7 @@ func main(){
 		os.Exit(1)
 	}
 
-	fmt.Println("encoded: ")
-	printBinOp(bin)
-	// vm.Run(bin)
+	vm.Run(bin)
 
 }
 
