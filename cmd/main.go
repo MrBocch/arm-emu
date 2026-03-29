@@ -30,7 +30,8 @@ func main(){
 		os.Exit(1)
 	}
 
-	vm.Run(bin)
+	//vm.RunTui(bin)
+	vm.RunGui(bin)
 
 }
 
