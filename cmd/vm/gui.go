@@ -68,8 +68,11 @@ func makeLeft() fyne.CanvasObject {
 	SPLabel  = widget.NewLabel("SP:  0x00000000")
 	PCLabel  = widget.NewLabel("PC:  0x00000000")
 
+	title := widget.NewLabel("Registers")
+	title.TextStyle = fyne.TextStyle{Bold: true}
+	title.Alignment = fyne.TextAlignCenter
 	return container.NewBorder(
-		widget.NewLabel("REGISTERS"),
+		title,
 		nil, nil, nil,
 		container.NewVBox(
 			R1Label, R2Label, R3Label, R4Label,
@@ -100,10 +103,37 @@ func updateRegisters() {
 }
 
 func makeRight() fyne.CanvasObject {
-    return container.NewVBox(
-        widget.NewButtonWithIcon("Step", theme.MediaPlayIcon(), func() {
-            vm.Step()
-            updateRegisters()
-        }),
-    )
+	memTable := widget.NewTable(
+		func() (int, int) { return len(vm.mem), 2 },
+		func() fyne.CanvasObject { return widget.NewLabel("") },
+		func(id widget.TableCellID, o fyne.CanvasObject) {
+			label := o.(*widget.Label)
+			if id.Col == 0 {
+				label.SetText(fmt.Sprintf("0x%08X", id.Row*4))
+			} else {
+				label.SetText(fmt.Sprintf("0x%08X", vm.mem[id.Row]))
+			}
+		},
+	)
+	memTable.SetColumnWidth(0, 120) // ADDRESS column
+	memTable.SetColumnWidth(1, 120) // VALUE column
+
+	stepBtn := widget.NewButtonWithIcon("Step", theme.MediaPlayIcon(), func() {
+		vm.Step()
+		updateRegisters()
+		memTable.Refresh()
+	})
+
+	title := widget.NewLabel("Memory")
+	title.TextStyle = fyne.TextStyle{Bold: true}
+	title.Alignment = fyne.TextAlignCenter
+	return container.NewBorder(
+		container.NewVBox(
+			title,
+			widget.NewLabel("Addresses"),
+		),
+		stepBtn,
+		nil, nil,
+		memTable,
+	)
 }
