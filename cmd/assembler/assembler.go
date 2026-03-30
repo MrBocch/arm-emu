@@ -233,6 +233,7 @@ func isOp(op string) bool {
 }
 
 func isRegister(reg string) bool {
+	// do i want r13 == lr, r14 == sp, r15 == pc ? (think i rather just have one)
 	switch strings.ToLower(reg) {
 	case "r0","r1","r2","r3","r4", "r5", "r6", "r7","r8", "r9", "r10", "r11", "r12",
 		 "r13","r14","r15","lr","sp","pc": { return true }

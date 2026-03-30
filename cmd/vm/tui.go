@@ -42,7 +42,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
         case "q":
             return m, tea.Quit
         case "n":
-        	step(&m.computer)
+        	m.computer.Step()
         }
 
     case tea.WindowSizeMsg:

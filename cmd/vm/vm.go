@@ -20,9 +20,11 @@ func initComputer(registerCount int, memory []uint32) Computer {
 	}
 }
 
+var LR = 13
+var SP = 14
 var PC = 15
 
-func step(c *Computer) {
+func (c *Computer) Step() {
 	// fetch
 	// what if pannics? here?
 	addr := c.registers[PC]
