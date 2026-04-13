@@ -14,15 +14,12 @@ type Computer struct {
 var MEM_LIMIT = 1_000_000
 
 func initComputer(registerCount int, memory []uint32) Computer {
-	if len(memory) > MEM_LIMIT { panic("hit memory limit") }
-
-    newMemory := make([]uint32, MEM_LIMIT) // zero-valued by default in Go
-    copy(newMemory, memory)
-
-	return Computer {
-		registers: make([]uint32, registerCount),
-		mem      : newMemory,
-	}
+    c := Computer{
+        registers: make([]uint32, registerCount),
+        mem:       make([]uint32, MEM_LIMIT),
+    }
+    c.LoadProgram(memory)
+    return c
 }
 
 func (c *Computer) LoadProgram(bin []uint32) {
