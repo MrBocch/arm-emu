@@ -31,11 +31,13 @@ var (
 	PCLabel *widget.Label
 )
 
+// a code smell? 
 var vm = initComputer(16, make([]uint32, 0))
 
 func RunGui(mem []uint32) {
 	// TODO : check for memory things.
-	vm.mem = mem
+	vm.LoadProgram(mem)
+	fmt.Println(len(vm.mem))
 
 
 	a := app.New()

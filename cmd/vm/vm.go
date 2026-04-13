@@ -2,6 +2,7 @@ package vm
 
 import (
 	"os"
+	// "fmt"
 	"github.com/MrBocch/arm-emu/cmd/assembler"
 )
 
@@ -10,14 +11,26 @@ type Computer struct {
 	mem       []uint32
 }
 
+var MEM_LIMIT = 1_000_000
+
 func initComputer(registerCount int, memory []uint32) Computer {
-	// should decide how much
-	// TODO
-	if len(memory) > 1_000_000 { panic("hit memory limit") }
+	if len(memory) > MEM_LIMIT { panic("hit memory limit") }
+
+    newMemory := make([]uint32, MEM_LIMIT) // zero-valued by default in Go
+    copy(newMemory, memory)
+
 	return Computer {
 		registers: make([]uint32, registerCount),
-		mem      : memory,
+		mem      : newMemory,
 	}
+}
+
+func (c *Computer) LoadProgram(bin []uint32) {
+    if len(bin) > MEM_LIMIT {
+        panic("program exceeds memory limit")
+    }
+    clear(c.mem)       // zero out first (Go 1.21+)
+    copy(c.mem, bin)
 }
 
 var LR = 13
