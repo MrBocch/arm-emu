@@ -67,13 +67,11 @@ func getStructure(line []Token, labels map[string]uint32) (Op, error) {
 		return checkHalt(line)
 	case "mov":
 		return checkMov(line, labels)
-	/*
 	case "add":
 		return checkAdd(line)
+	/*
 	case "sub":
 		return checkSub(line)
-	case "halt":
-		return checkHalt(line)
 	case "cmp":
 		return checkCmp(line)
 	}
@@ -150,7 +148,6 @@ func checkMov(line []Token, labels map[string]uint32) (Op, error) {
 	return nil, fmt.Errorf("invalid mov instruction")
 }
 
-/*
 // add r0, r1, r2
 // add r0, r1, #0b11
 // add r0, r1, #3
@@ -160,18 +157,30 @@ func checkAdd(line []Token) (Op, error) {
 	switch len(line){
 	case 6:
 		if line[1].Kind == Register && line[2].Kind == Comma && line[3].Kind == Register && line[4].Kind == Comma && line[5].Kind == Register {
-			return Oprrr{ Op: "add", R1: lower(line[1].Lexeme), R2: lower(line[3].Lexeme), R3: lower(line[5].Lexeme),}, nil
+			return Oprrr{
+				Op: "addrrr",
+				R1: RegisterToI8[lower(line[1].Lexeme)],
+				R2: RegisterToI8[lower(line[3].Lexeme)],
+				R3: RegisterToI8[lower(line[5].Lexeme)],
+			}, nil
 		}
 	case 7:
 		if line[1].Kind == Register && line[2].Kind == Comma && line[3].Kind == Register && line[4].Kind == Comma && line[5].Kind == Hash && isNumber(line[6]) {
 		   	// parse immediate
-		   	imm := parseImm(line[6])
-		   	return Oprri{ Op: "add", R1: lower(line[1].Lexeme), R2: lower(line[3].Lexeme), I: imm,}, nil
-		   }
+			var imm int32
+			if isNumber(line[6]) { imm = parseImm(line[6]) } else { panic("parse identifier within add") }
+		   	return Oprri{
+		   		Op: "addrri",
+		   		R1: RegisterToI8[lower(line[1].Lexeme)],
+		   		R2: RegisterToI8[lower(line[3].Lexeme)],
+		   		I: imm,
+		   	}, nil
+	   }
 	}
 	return nil, fmt.Errorf("invalid add instruction")
 }
 
+/*
 // sub r0, r1, r2
 // sub r0, r1, #(number)
 func checkSub(line []Token) (Op, error) {
@@ -179,7 +188,12 @@ func checkSub(line []Token) (Op, error) {
 	switch len(line) {
 	case 6:
 		if line[1].Kind == Register && line[2].Kind == Comma && line[3].Kind == Register && line[4].Kind == Comma && line[5].Kind == Register {
-			return Oprrr{ Op: "sub", R1: lower(line[1].Lexeme), R2: lower(line[3].Lexeme), R3: lower(line[5].Lexeme),}, nil
+			return Oprrr{
+				Op: "sub", R1: lower(line[1].Lexeme),
+				R2: lower(line[3].Lexeme),
+				R3: lower(line[5].Lexeme),
+			}
+			, nil
 		}
 	case 7:
 		if  line[1].Kind == Register && line[2].Kind == Comma && line[3].Kind == Register && line[4].Kind == Comma && line[5].Kind == Hash && isNumber(line[6]) {

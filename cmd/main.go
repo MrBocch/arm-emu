@@ -30,6 +30,7 @@ func main(){
 		os.Exit(1)
 	}
 
+	printBinary(bin)
 	//vm.RunTui(bin)
 	vm.RunGui(bin)
 

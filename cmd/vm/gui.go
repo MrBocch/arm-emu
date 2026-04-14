@@ -33,7 +33,7 @@ var (
 	PCLabel *widget.Label
 )
 
-// a code smell? 
+// a code smell?
 var vm = initComputer(16, make([]uint32, 0))
 
 func RunGui(mem []uint32) {

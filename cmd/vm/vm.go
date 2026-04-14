@@ -2,7 +2,7 @@ package vm
 
 import (
 	"os"
-	// "fmt"
+	"fmt"
 	"github.com/MrBocch/arm-emu/cmd/assembler"
 )
 
@@ -14,6 +14,8 @@ type Computer struct {
 	// armlite appears to not even use these for anything.
 	// the manual says (pg 30) "we will not need them for now"
 	// and never brings it up again
+	// the reference manual does, BCS, BVS, BMI
+	// will comeback to this.
 	// cflag     bool
 	// vflag     bool
 }
@@ -73,7 +75,9 @@ func decode(c *Computer, op assembler.Op) {
 	case assembler.Oprr:
 		executeOprr(c, v.Op, v.R1, v.R2)
 
-	// case assembler.Oprri:
+	case assembler.Oprri:
+		executeOprri(c, v.Op, v.R1, v.R2, v.I)
+
 	case assembler.Oprrr:
 		executeOprrr(c, v.Op, v.R1, v.R2, v.R3)
 
@@ -85,6 +89,7 @@ func decode(c *Computer, op assembler.Op) {
 func executeOp(c *Computer, op string) {
 	switch op {
 	case "halt":
+		fmt.Println("halted")
 		os.Exit(0)
 	default:
 		panic("havent implemented (this instruction) yet?")
@@ -109,8 +114,23 @@ func executeOprr(c *Computer, op string, r1 uint8, r2 uint8) {
 	}
 }
 
+func executeOprri(c *Computer, op string, r1 uint8, r2 uint8, i int32) {
+	switch op {
+	case "addrri":
+		c.registers[r1] = c.registers[r2] + uint32(i)
+	case "subrri":
+		c.registers[r1] = c.registers[r2] - uint32(i)
+	default:
+		panic("haven't implemented (this instruction) yet?")
+	}
+}
+
 func executeOprrr(c *Computer, op string, r1 uint8, r2 uint8, r3 uint8) {
 	switch op {
+	case "addrrr":
+		c.registers[r1] = c.registers[r2] + c.registers[r3]
+	case "subrrr":
+		c.registers[r1] = c.registers[r2] - c.registers[r3]
 	default:
 		panic("havent implemented (this instruction) yet?")
 	}

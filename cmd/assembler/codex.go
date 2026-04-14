@@ -67,20 +67,6 @@ func (o Oprrr) String() string {
 	return fmt.Sprintf("%s %d, %d, %d", o.Op, o.R1, o.R2, o.R3)
 }
 
-
-/* prob jsut have analyzer encode/decode this in
-func opToS(op Op) string {
-	switch op.(type) {
-	case Opp: return ""
-	case Oprr: return "rr"
-	case Opri: return "ri"
-	case Oprrr: return "rrr"
-	}
-	panic("something is wrong here")
-	//return ""
-}
-*/
-
 var RegisterToI8 = map[string]uint8 {
 	"r0": 0,
 	"r1": 1,
@@ -99,6 +85,7 @@ var RegisterToI8 = map[string]uint8 {
 	"lr": 14,
 	"pc": 15,
 }
+
 var IToRegister = [16]string {
 	"r0", "r1", "r2", "r3", "r4", "r5", "r6",
 	"r7", "r8", "r9", "r10", "r11", "r12",
@@ -121,6 +108,14 @@ var IToRegister = [16]string {
 // op ri  (op reg, imm)
 // op rr  (op reg, reg)
 // op rri (op reg, reg, imm)
+func flipMap[K comparable, V comparable](m map[K]V) map[V]K {
+    flipped := make(map[V]K)
+    for k, v := range m {
+        flipped[v] = k
+    }
+    return flipped
+}
+
 var opToB = map[string]uint8 {
 	"halt":  0,
 	"movrr": 1,
@@ -132,27 +127,28 @@ var opToB = map[string]uint8 {
 	"cmprr" :7,
 	"cmpri" :8,
 }
-func flipMap[K comparable, V comparable](m map[K]V) map[V]K {
-    flipped := make(map[V]K)
-    for k, v := range m {
-        flipped[v] = k
-    }
-    return flipped
-}
+
 var bToOp = flipMap(opToB)
 
 func Encode(op Op, labels map[string]uint32) uint32 {
 	// what about immediates?
+	// fuck golang for making me check in each case
+	// this is likely a skill issue
 	switch v := op.(type) {
 	case Opp:
+		if _, ok := opToB[v.Op]; !ok { panic("invalid opcode: " + v.Op + " likely error in analyzer?") }
 		return packOp(opToB[v.Op])
 	case Oprr:
+		if _, ok := opToB[v.Op]; !ok { panic("invalid opcode: " + v.Op + " likely error in analyzer?") }
 		return packOprr(opToB[v.Op], v.R1, v.R2)
 	case Opri:
+		if _, ok := opToB[v.Op]; !ok { panic("invalid opcode: " + v.Op + " likely error in analyzer?") }
 		return packOpri(opToB[v.Op], v.R1, uint32(v.I))
 	case Oprrr:
+		if _, ok := opToB[v.Op]; !ok { panic("invalid opcode: " + v.Op + " likely error in analyzer?") }
 		return packOprrr(opToB[v.Op], v.R1, v.R2, v.R3)
 	case Oprri:
+		if _, ok := opToB[v.Op]; !ok { panic("invalid opcode: " + v.Op + " likely error in analyzer?") }
 		return packOprri(opToB[v.Op], v.R1, v.R2, uint32(v.I))
 	}
 	panic("unknown op type")
@@ -179,23 +175,22 @@ func Decode(bin uint32) (Op, error) {
         r1 := uint8((bin >> 20) & 0xF)
         imm := int32(bin & 0x000FFFFF)
         return Opri{Op: "movri", R1: r1, I: imm}, nil
-    }
-    /*
     case "addrrr", "subrrr":
         // Format: 8-bit op + 4-bit r1 + 4-bit r2 + 4-bit r3
         // Note: remaining bits might be unused or for future expansion
-        r1 := bToRegister[s[8:12]]
-        r2 := bToRegister[s[12:16]]
-        r3 := bToRegister[s[16:20]]
+        r1 := uint8((bin >> 20) & 0xF)
+        r2 := uint8((bin >> 16) & 0xF)
+		r3 := uint8((bin >> 12) & 0xF)
         return Oprrr{Op: opName, R1: r1, R2: r2, R3: r3}, nil
 
     case "addrri", "subrri":
         // Format: 8-bit op + 4-bit r1 + 4-bit r2 + 16-bit immediate
-        r1 := bToRegister[s[8:12]]
-        r2 := bToRegister[s[12:16]]
-        i, _ := strconv.ParseInt(s[16:32], 2, 32)
-        return Oprri{Op: opName, R1: r1, R2: r2, I: int32(i)}, nil
-
+		r1 := uint8((bin >> 20) & 0xF)
+		r2 := uint8((bin >> 16) & 0xF)
+		i  := int32(bin & 0xFFFF) // signed 16-bit immediate
+        return Oprri{Op: opName, R1: r1, R2: r2, I: i}, nil
+    }
+    /*
     case "cmprr":
         // Format: 8-bit op + 4-bit r1 + 4-bit r2
         r1 := bToRegister[s[8:12]]
