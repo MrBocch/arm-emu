@@ -13,6 +13,8 @@ import (
 var APP_TITLE = "FIME CORE VM"
 
 var (
+	NFLabel *widget.Label
+	ZFLabel *widget.Label
 	R0Label *widget.Label
 	R1Label *widget.Label
 	R2Label *widget.Label
@@ -35,10 +37,7 @@ var (
 var vm = initComputer(16, make([]uint32, 0))
 
 func RunGui(mem []uint32) {
-	// TODO : check for memory things.
 	vm.LoadProgram(mem)
-	fmt.Println(len(vm.mem))
-
 
 	a := app.New()
 	// a.Settings().SetTheme(theme.LightTheme())
@@ -54,6 +53,8 @@ func RunGui(mem []uint32) {
 }
 
 func makeLeft() fyne.CanvasObject {
+	NFLabel  = widget.NewLabel("N: 0")
+	ZFLabel  = widget.NewLabel("Z: 0")
 	R0Label  = widget.NewLabel("R0:  0x00000000")
 	R1Label  = widget.NewLabel("R1:  0x00000000")
 	R2Label  = widget.NewLabel("R2:  0x00000000")
@@ -78,6 +79,7 @@ func makeLeft() fyne.CanvasObject {
 		title,
 		nil, nil, nil,
 		container.NewVBox(
+			NFLabel, ZFLabel,
 			R0Label, R1Label, R2Label, R3Label, R4Label,
 			R5Label, R6Label, R7Label, R8Label,
 			R9Label, R10Label, R11Label, R12Label,
@@ -86,7 +88,16 @@ func makeLeft() fyne.CanvasObject {
 	)
 }
 
+func b2i(b bool) int {
+	if b {
+		return 1
+	}
+	return 0
+}
+
 func updateRegisters() {
+	NFLabel.SetText(fmt.Sprintf("N: %d", b2i(vm.nflag)))
+	ZFLabel.SetText(fmt.Sprintf("Z: %d", b2i(vm.zflag)))
 	R0Label.SetText(fmt.Sprintf("R0:  0x%08X", vm.registers[0]))
 	R1Label.SetText(fmt.Sprintf("R1:  0x%08X", vm.registers[1]))
 	R2Label.SetText(fmt.Sprintf("R2:  0x%08X", vm.registers[2]))
@@ -96,7 +107,7 @@ func updateRegisters() {
 	R6Label.SetText(fmt.Sprintf("R6:  0x%08X", vm.registers[6]))
 	R7Label.SetText(fmt.Sprintf("R7:  0x%08X", vm.registers[7]))
 	R8Label.SetText(fmt.Sprintf("R8:  0x%08X", vm.registers[8]))
-	R9Label.SetText(fmt.Sprintf("R9: 0x%08X", vm.registers[9]))
+	R9Label.SetText(fmt.Sprintf("R9:  0x%08X", vm.registers[9]))
 	R10Label.SetText(fmt.Sprintf("R10: 0x%08X", vm.registers[10]))
 	R11Label.SetText(fmt.Sprintf("R11: 0x%08X", vm.registers[11]))
 	R12Label.SetText(fmt.Sprintf("R12: 0x%08X", vm.registers[12]))

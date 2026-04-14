@@ -9,6 +9,13 @@ import (
 type Computer struct {
 	registers []uint32
 	mem       []uint32
+	nflag     bool
+	zflag     bool
+	// armlite appears to not even use these for anything.
+	// the manual says (pg 30) "we will not need them for now"
+	// and never brings it up again
+	// cflag     bool
+	// vflag     bool
 }
 
 var MEM_LIMIT = 1_000_000
@@ -17,6 +24,8 @@ func initComputer(registerCount int, memory []uint32) Computer {
     c := Computer{
         registers: make([]uint32, registerCount),
         mem:       make([]uint32, MEM_LIMIT),
+		nflag: false,
+		zflag: false,
     }
     c.LoadProgram(memory)
     return c
