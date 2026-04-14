@@ -69,9 +69,9 @@ func getStructure(line []Token, labels map[string]uint32) (Op, error) {
 		return checkMov(line, labels)
 	case "add":
 		return checkAdd(line)
-	/*
 	case "sub":
 		return checkSub(line)
+	/*
 	case "cmp":
 		return checkCmp(line)
 	}
@@ -180,7 +180,6 @@ func checkAdd(line []Token) (Op, error) {
 	return nil, fmt.Errorf("invalid add instruction")
 }
 
-/*
 // sub r0, r1, r2
 // sub r0, r1, #(number)
 func checkSub(line []Token) (Op, error) {
@@ -189,23 +188,29 @@ func checkSub(line []Token) (Op, error) {
 	case 6:
 		if line[1].Kind == Register && line[2].Kind == Comma && line[3].Kind == Register && line[4].Kind == Comma && line[5].Kind == Register {
 			return Oprrr{
-				Op: "sub", R1: lower(line[1].Lexeme),
-				R2: lower(line[3].Lexeme),
-				R3: lower(line[5].Lexeme),
-			}
-			, nil
+				Op: "subrrr",
+				R1: RegisterToI8[lower(line[1].Lexeme)],
+				R2: RegisterToI8[lower(line[3].Lexeme)],
+				R3: RegisterToI8[lower(line[5].Lexeme)],
+			}, nil
 		}
 	case 7:
 		if  line[1].Kind == Register && line[2].Kind == Comma && line[3].Kind == Register && line[4].Kind == Comma && line[5].Kind == Hash && isNumber(line[6]) {
-			// parse immediate
-			imm := parseImm(line[6])
-			return Oprri{ Op: "sub", R1: lower(line[1].Lexeme), R2: lower(line[3].Lexeme), I: imm,}, nil
+			var imm int32
+			if isNumber(line[6]) { imm = parseImm(line[6]) } else { panic("parse identifier within subrri") }		// parse immediate
+			return Oprri{
+				Op: "subrri",
+				R1: RegisterToI8[lower(line[1].Lexeme)],
+				R2: RegisterToI8[lower(line[3].Lexeme)],
+				I: imm,
+			}, nil
 		}
 	}
 
 	return nil, fmt.Errorf("invalid sub instruction")
 }
 
+/*
 // cmp r0, r1
 // cmp r0, #0b10
 // cmp r0, #10
