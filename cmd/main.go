@@ -26,7 +26,7 @@ func main(){
 
 	bin, err := assembler.Analyze(tokens)
 	if err != nil {
-		fmt.Println("Fix error: ", err)
+		// fmt.Println("Fix error: ", err)
 		os.Exit(1)
 	}
 

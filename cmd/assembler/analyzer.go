@@ -42,7 +42,8 @@ func Analyze(tokens []Token) ([]uint32, error) {
 		op, err := getStructure(line, userLabels)
 		if err != nil {
 			fmt.Printf("[ERROR LINE %v]\n", line[0].Line)
-			fmt.Println(err)
+			printCodeLine(line)
+			// fmt.Println(err)
 			hasErrors = true
 		}
 
@@ -54,10 +55,18 @@ func Analyze(tokens []Token) ([]uint32, error) {
 		line = line[:0]
 	}
 
-	if hasErrors { return nil, fmt.Errorf("Wont encode due to error") }
+	if hasErrors { return nil, fmt.Errorf("\nWont encode due to error") }
 	return mem, nil
 }
 
+func printCodeLine(line []Token) {
+	fmt.Print("-> ")
+	// need to add more logic for it to be prettier.
+	for _, l := range line {
+		fmt.Printf("%v ", l.Lexeme)
+	}
+	fmt.Println()
+}
 
 func getStructure(line []Token, labels map[string]uint32) (Op, error) {
 	if len(line) == 0 { return nil, fmt.Errorf("Empty instruction") }
