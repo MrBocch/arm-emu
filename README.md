@@ -29,8 +29,8 @@ No doubly nesting comments.
 
 | opcode   | implemented | 
 |----------|-------------|
-| mov      |     ❌      |
-| add      |     ❌      |
-| sub      |     ❌      | 
+| mov      |     ✅      |
+| add      |     ✅      |
+| sub      |     ✅      | 
 
 ....
