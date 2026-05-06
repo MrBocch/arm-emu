@@ -1,24 +1,27 @@
 package assembler
 
 import (
-    "fmt"
-    "strings"
-    "strconv"
+	"fmt"
+	"strconv"
+	"strings"
 )
 
-func getLabels(tokens []Token) map[string]uint32 {
+func getLabels(tokens []Token) map[string]int32 {
+	// returning, a map of
+	// identifier -> an address to memory.
+	//
 	// what about directives?
 	idx := 0
 	var line [] Token
-	labels := make(map[string]uint32)
+	labels := make(map[string]int32)
 	for _, t := range tokens {
 		if t.Kind != NewLine { line = append(line, t); continue }
 
-		if line[0].Kind == Identifier &&
-		   line[1].Kind == Colon {
-		   	labels[line[0].Lexeme] = uint32(idx)
+		if line[0].Kind == Identifier && line[1].Kind == Colon {
+		   	labels[line[0].Lexeme] = int32(idx)
+			// idx += 1
 	   } else {
-	   		idx += 4
+	   		idx += 1
 	   }
 
 		line = line[:0]
@@ -30,7 +33,7 @@ func Analyze(tokens []Token) ([]uint32, error) {
 	var line [] Token
 	// haveErr := false
 	userLabels := getLabels(tokens)
-	// fmt.Println(userLabels)
+	fmt.Println(userLabels)
 	// directives should prob check for them just like labels, and
 	// store the action that the program must load into memory once running vm
 
@@ -38,6 +41,8 @@ func Analyze(tokens []Token) ([]uint32, error) {
 	var mem []uint32
 	for _, t := range tokens {
 		if t.Kind != NewLine { line = append(line, t); continue }
+
+		if isLabel(line) { line = line[:0] ; continue }
 
 		op, err := getStructure(line, userLabels)
 		if err != nil {
@@ -48,7 +53,8 @@ func Analyze(tokens []Token) ([]uint32, error) {
 		}
 
 		if !hasErrors {
-			mem = append(mem, Encode(op, userLabels))
+			//mem = append(mem, Encode(op, userLabels))
+			mem = append(mem, Encode(op))
 		}
 
 		// what is this doing?
@@ -68,7 +74,8 @@ func printCodeLine(line []Token) {
 	fmt.Println()
 }
 
-func getStructure(line []Token, labels map[string]uint32) (Op, error) {
+func getStructure(line []Token, labels map[string]int32) (Op, error) {
+	// caller checks for user defined lables
 	if len(line) == 0 { return nil, fmt.Errorf("Empty instruction") }
 
 	switch strings.ToLower(line[0].Lexeme) {
@@ -80,10 +87,15 @@ func getStructure(line []Token, labels map[string]uint32) (Op, error) {
 		return checkAdd(line)
 	case "sub":
 		return checkSub(line)
-	/*
 	case "cmp":
 		return checkCmp(line)
-	}
+	case "blt":
+		return checkBlt(line, labels)
+	case "beq":
+		return checkBeq(line, labels)
+	case "bgt":
+		return checkBgt(line, labels)
+	/*
 	return nil, fmt.Errorf("invalid instruction instruction")
 	*/
 	/*
@@ -129,7 +141,7 @@ func checkHalt(line []Token) (Op, error) {
 // mov r0, r1
 // mov r0, #(number)
 // mov r0, #msg // meaning mov r0, the beggining of msg assembly directive
-func checkMov(line []Token, labels map[string]uint32) (Op, error) {
+func checkMov(line []Token, labels map[string]int32) (Op, error) {
 	// TODO: negative numbers
 	switch len(line) {
 	case 4:
@@ -219,7 +231,6 @@ func checkSub(line []Token) (Op, error) {
 	return nil, fmt.Errorf("invalid sub instruction")
 }
 
-/*
 // cmp r0, r1
 // cmp r0, #0b10
 // cmp r0, #10
@@ -229,25 +240,73 @@ func checkCmp(line []Token) (Op, error) {
 	switch len(line) {
 	case 4:
 		if line[1].Kind == Register && line[2].Kind == Comma && line[3].Kind == Register {
-			return Oprr{ Op: "cmp", R1: lower(line[1].Lexeme), R2: lower(line[3].Lexeme)}, nil
+			return Oprr{
+				Op: "cmprr",
+				R1: RegisterToI8[lower(line[1].Lexeme)],
+				R2: RegisterToI8[lower(line[3].Lexeme)],
+			}, nil
 		}
 	case 5:
 		if line[1].Kind == Register && line[2].Kind == Comma && line[3].Kind == Hash && isNumber(line[4]) {
 			imm := parseImm(line[4])
-			return Opri{ Op: "cmp", R1: lower(line[1].Lexeme), I: imm}, nil
+			return Opri{
+				Op: "cmpri",
+				R1: RegisterToI8[lower(line[1].Lexeme)],
+				I: imm,
+			}, nil
 		}
 	}
 	return nil, fmt.Errorf("invalid cmp instruction")
 }
 
-// halt
-func checkHalt(line []Token) (Op, error) {
-	if len(line) == 1 && lower(line[0].Lexeme) == "halt" {
-		return Opp{ Op: "halt", }, nil
+// blt label
+func checkBlt(line []Token, labels map[string]int32) (Op, error) {
+	switch len(line) {
+	case 2:
+		if line[1].Kind != Identifier { panic("how get here?") }
+		_, ok := labels[line[1].Lexeme]
+		if !ok { panic("This shouldn't be possible") }
+		return Opl{
+			Op: "bltl",
+			I : labels[line[1].Lexeme],
+		}, nil
 	}
-	return nil, fmt.Errorf("invalid halt instruction")
+
+	return nil, fmt.Errorf("Error on blt instruction")
 }
 
+// beq label
+func checkBeq(line []Token, labels map[string]int32) (Op, error) {
+	switch len(line) {
+	case 2:
+		if line[1].Kind != Identifier { panic("how get here?") }
+		_, ok := labels[line[1].Lexeme]
+		if !ok { panic("This shouldn't be possible") }
+		return Opl {
+			Op: "beql",
+			I : labels[line[1].Lexeme],
+		}, nil
+
+	}
+
+	return nil, fmt.Errorf("Error on beq instruction")
+}
+
+func checkBgt(line []Token, labels map[string]int32) (Op, error) {
+	switch len(line){
+	case 2:
+		if line[1].Kind != Identifier { panic("how we get here?") }
+		_, ok := labels[line[1].Lexeme]
+		if !ok { panic("This shouldn't be possible") }
+		return Opl {
+			Op: "bgtl",
+			I : labels[line[1].Lexeme],
+		}, nil
+	}
+	return nil, fmt.Errorf("Error on bgt instruction")
+}
+
+/*
 // b label
 func checkB(line []Token) bool {
 	// TODO check if its an actuall user defined label
@@ -394,4 +453,8 @@ func parseImm(tok Token) int32 {
 	}
 
 	return int32(n)
+}
+
+func isLabel(line []Token) bool {
+	return len(line) == 2 && line[0].Kind == Identifier && line[1].Kind == Colon
 }

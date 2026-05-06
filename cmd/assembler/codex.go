@@ -19,6 +19,16 @@ func (o Opp) String() string {
 	return fmt.Sprintf("%s", o.Op)
 }
 
+// OP, l (b|beq|blt|bgt label)
+type Opl struct {
+	Op string
+	I int32
+}
+func (Opl) isOp() {}
+func (o Opl) String() string {
+	return fmt.Sprintf("%s %d", o.Op, o.I)
+}
+
 // OP, R, R
 type Oprr struct {
 	Op string
@@ -126,11 +136,17 @@ var opToB = map[string]uint8 {
 	"subrri":6,
 	"cmprr" :7,
 	"cmpri" :8,
+	"bltl"  :9,
+	"beql"  :10,
+	"bgtl"  :11,
 }
 
 var bToOp = flipMap(opToB)
 
-func Encode(op Op, labels map[string]uint32) uint32 {
+// func Encode(op Op, labels map[string]int32) uint32 {
+// encoder shouldn't get the map labels passed in right?
+// that should be resolved by Op maker?
+func Encode(op Op) uint32 {
 	// what about immediates?
 	// fuck golang for making me check in each case
 	// this is likely a skill issue
@@ -138,6 +154,9 @@ func Encode(op Op, labels map[string]uint32) uint32 {
 	case Opp:
 		if _, ok := opToB[v.Op]; !ok { panic("invalid opcode: " + v.Op + " likely error in analyzer?") }
 		return packOp(opToB[v.Op])
+	case Opl:
+		if _, ok := opToB[v.Op]; !ok { panic("invalid opcode: " + v.Op + " likely error in analyzer?") }
+		return packOpl(opToB[v.Op], v.I)
 	case Oprr:
 		if _, ok := opToB[v.Op]; !ok { panic("invalid opcode: " + v.Op + " likely error in analyzer?") }
 		return packOprr(opToB[v.Op], v.R1, v.R2)
@@ -189,21 +208,20 @@ func Decode(bin uint32) (Op, error) {
 		r2 := uint8((bin >> 16) & 0xF)
 		i  := int32(bin & 0xFFFF) // signed 16-bit immediate
         return Oprri{Op: opName, R1: r1, R2: r2, I: i}, nil
-    }
-    /*
+    case "cmpri":
+        r1 := uint8((bin>>20) & 0xF)
+        imm := int32(bin & 0x000FFFFF)
+        return Opri{Op: opName, R1: r1, I: imm}, nil
     case "cmprr":
-        // Format: 8-bit op + 4-bit r1 + 4-bit r2
-        r1 := bToRegister[s[8:12]]
-        r2 := bToRegister[s[12:16]]
+        r1 := uint8((bin>>20) & 0xF)
+        r2 := uint8((bin >> 16) & 0xF)
         return Oprr{Op: opName, R1: r1, R2: r2}, nil
 
-    case "cmpri":
-        // Format: 8-bit op + 4-bit r1 + 20-bit immediate
-        r1 := bToRegister[s[8:12]]
-        i, _ := strconv.ParseInt(s[12:32], 2, 32)
-        return Opri{Op: opName, R1: r1, I: int32(i)}, nil
+    case "bltl", "beql", "bgtl" :
+   	    imm := int32(bin & 0x00FFFFFF)
+    	return Opl{Op: opName, I: imm}, nil
+
     }
-    */
     return nil, fmt.Errorf("error, (not implemented yet?)")
 }
 
@@ -213,6 +231,15 @@ func packOp(op uint8) uint32 {
     return uint32(op) << 24
 }
 
+func packOpl(op uint8, label int32) uint32 {
+	res := uint32(0)
+    res |= uint32(op) << 24
+    // label in bits 0-23
+    res |= uint32(label) & 0x00FFFFFF
+
+    return res
+}
+// so much gunk in code base man wtf am i doing?
 func packOpi(op uint8, imm uint32) uint32 {
     res := uint32(0)
     res |= uint32(op) << 24

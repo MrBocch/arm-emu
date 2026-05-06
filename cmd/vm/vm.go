@@ -69,6 +69,9 @@ func decode(c *Computer, op assembler.Op) {
 	case assembler.Opp:
 		executeOp(c, v.Op)
 
+	case assembler.Opl:
+		executeOpl(c, v.Op, v.I)
+
 	case assembler.Opri:
 		executeOpri(c, v.Op, v.R1, v.I)
 
@@ -96,10 +99,36 @@ func executeOp(c *Computer, op string) {
 	}
 }
 
+func executeOpl(c *Computer, op string, i int32) {
+	switch op {
+	case "bltl":
+		if c.nflag && !c.zflag { c.registers[PC] = uint32(i) }
+	case "beql":
+		if !c.nflag && c.zflag { c.registers[PC] = uint32(i) }
+	case "bgtl":
+		if !c.nflag && !c.zflag { c.registers[PC] = uint32(i) }
+	}
+}
+
 func executeOpri(c *Computer, op string, r1 uint8, i int32) {
 	switch op {
 	case "movri":
 		c.registers[r1] = uint32(i)
+	case "cmpri":
+		a := int32(c.registers[r1])
+		if a == i {
+			c.nflag = false
+			c.zflag = true
+		}
+		if a > i {
+			c.nflag = false
+		 	c.zflag = false
+		}
+		if a < i {
+			c.nflag = true
+			c.zflag = false
+		}
+
 	default:
 		panic("havent implemented (this instruction) yet?")
 	}
@@ -109,6 +138,22 @@ func executeOprr(c *Computer, op string, r1 uint8, r2 uint8) {
 	switch op {
 	case "movrr":
 		c.registers[r1] = c.registers[r2]
+	case "cmprr":
+		a := int32(c.registers[r1])
+		b := int32(c.registers[r2])
+		if a == b {
+			c.nflag = false
+			c.zflag = true
+		}
+		if a > b {
+			c.nflag = false
+		 	c.zflag = false
+		}
+		if a < b {
+			c.nflag = true
+			c.zflag = false
+		}
+
 	default:
 		panic("havent implemented (this instruction) yet?")
 	}

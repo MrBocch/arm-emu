@@ -1,8 +1,8 @@
 package main
 
 import (
-	"os"
 	"fmt"
+	"os"
 	"github.com/MrBocch/arm-emu/cmd/assembler"
 	"github.com/MrBocch/arm-emu/cmd/vm"
 )
@@ -31,7 +31,8 @@ func main(){
 	}
 
 	printBinary(bin)
-	//vm.RunTui(bin)
+	decodeBin(bin)
+	// vm.RunTui(bin)
 	vm.RunGui(bin)
 
 }
@@ -50,5 +51,14 @@ func printBinOp(bin []uint32) {
 			panic("error on decoding")
 		}
 		fmt.Println(pack)
+	}
+}
+
+func decodeBin(bin []uint32) {
+	for idx, b := range bin {
+		op, err := assembler.Decode(b)
+		if err != nil { fmt.Println(err); panic("error in decoding") }
+		fmt.Printf("%d, %v\n", idx, op)
+
 	}
 }
