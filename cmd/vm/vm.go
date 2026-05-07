@@ -59,12 +59,12 @@ func (c *Computer) Step() {
 		panic("error at runtime")
 	}
 
-	 decode(c, op)
+	 decode_execute(c, op)
 }
 
 
 
-func decode(c *Computer, op assembler.Op) {
+func decode_execute(c *Computer, op assembler.Op) {
 	switch v := op.(type) {
 	case assembler.Opp:
 		executeOp(c, v.Op)
@@ -101,6 +101,9 @@ func executeOp(c *Computer, op string) {
 
 func executeOpl(c *Computer, op string, i int32) {
 	switch op {
+	// dont confuse with Branch with Link
+	case "bl":
+		c.registers[PC] = uint32(i)
 	case "bltl":
 		if c.nflag && !c.zflag { c.registers[PC] = uint32(i) }
 	case "beql":
@@ -165,6 +168,10 @@ func executeOprri(c *Computer, op string, r1 uint8, r2 uint8, i int32) {
 		c.registers[r1] = c.registers[r2] + uint32(i)
 	case "subrri":
 		c.registers[r1] = c.registers[r2] - uint32(i)
+	case "lslrri":
+		c.registers[r1] = c.registers[r2] << uint32(i)
+	case "lsrrri":
+		c.registers[r1] = c.registers[r2] >> uint32(i)
 	default:
 		panic("haven't implemented (this instruction) yet?")
 	}
@@ -176,6 +183,10 @@ func executeOprrr(c *Computer, op string, r1 uint8, r2 uint8, r3 uint8) {
 		c.registers[r1] = c.registers[r2] + c.registers[r3]
 	case "subrrr":
 		c.registers[r1] = c.registers[r2] - c.registers[r3]
+	case "lslrrr":
+		c.registers[r1] = c.registers[r2] << c.registers[r3]
+	case "lsrrrr":
+		c.registers[r1] = c.registers[r2] >> c.registers[r3]
 	default:
 		panic("havent implemented (this instruction) yet?")
 	}

@@ -227,7 +227,7 @@ func isOp(op string) bool {
 	switch strings.ToLower(op) {
 	// its bad to combinar code + data, get this from somewhere else, dont want to
 	// track several lists of ops
-	case "mov", "add", "sub", "str","ldr","cmp", "beq", "b", "bgt", "push", "pop", "bl", "adds","halt", "ret": { return true }
+	case "mov", "add", "sub", "str","ldr","cmp", "beq", "b", "bgt", "push", "pop", "bl", "adds","halt", "ret", "lsl", "lsr": { return true }
 	}
 	return false
 }
@@ -236,7 +236,7 @@ func isRegister(reg string) bool {
 	// do i want r13 == lr, r14 == sp, r15 == pc ? (think i rather just have one)
 	switch strings.ToLower(reg) {
 	case "r0","r1","r2","r3","r4", "r5", "r6", "r7","r8", "r9", "r10", "r11", "r12",
-		 "r13","r14","r15","lr","sp","pc": { return true }
+		 "lr","sp","pc": { return true }
 	}
 	return false
 }

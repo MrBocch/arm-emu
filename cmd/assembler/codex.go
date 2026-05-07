@@ -136,9 +136,14 @@ var opToB = map[string]uint8 {
 	"subrri":6,
 	"cmprr" :7,
 	"cmpri" :8,
-	"bltl"  :9,
-	"beql"  :10,
-	"bgtl"  :11,
+	"bl"    :9, // not to be consfused with Branch with Link, its Branch to Label
+	"bltl"  :10,// thinking about it, doesn't make sense to have (btype) (label) should have just, btype
+	"beql"  :11,
+	"bgtl"  :12,
+	"lslrri":13,
+	"lslrrr":14,
+	"lsrrri":15,
+	"lsrrrr":16, //this is getting ridiculous
 }
 
 var bToOp = flipMap(opToB)
@@ -183,6 +188,8 @@ func Decode(bin uint32) (Op, error) {
     }
 
     // Decode based on operation type
+    // looking at it now, should have done a
+    // uint32 -> Op, uint32 -> Oprrri ....
     switch opName {
     case "halt":
     	return Opp{ Op : "halt", }, nil
@@ -217,14 +224,27 @@ func Decode(bin uint32) (Op, error) {
         r2 := uint8((bin >> 16) & 0xF)
         return Oprr{Op: opName, R1: r1, R2: r2}, nil
 
-    case "bltl", "beql", "bgtl" :
+    case "bl", "bltl", "beql", "bgtl" :
    	    imm := int32(bin & 0x00FFFFFF)
     	return Opl{Op: opName, I: imm}, nil
 
+    case "lslrrr", "lsrrrr":
+	    r1 := uint8((bin>>20) & 0xF)
+		r2 := uint8((bin >> 16) & 0xF)
+		r3 := uint8((bin >> 12) & 0xF)
+		return Oprrr{Op: opName, R1: r1, R2: r2, R3: r3 }, nil
+
+    case "lslrri", "lsrrri":
+	    r1 := uint8((bin>>20) & 0xF)
+		r2 := uint8((bin >> 16) & 0xF)
+		i  := int32(bin & 0xFFFF) // signed 16-bit immediate
+		return Oprri{Op: opName, R1: r1, R2: r2, I: i}, nil
     }
-    return nil, fmt.Errorf("error, (not implemented yet?)")
+
+    return nil, fmt.Errorf("error: operation %q not implemented yet", opName)
 }
 
+// i wrote these functions why am i not using them?
 // for encoding/decoding
 func packOp(op uint8) uint32 {
 	// op is 8 bit wide (32-8)

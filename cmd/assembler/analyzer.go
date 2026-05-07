@@ -89,12 +89,18 @@ func getStructure(line []Token, labels map[string]int32) (Op, error) {
 		return checkSub(line)
 	case "cmp":
 		return checkCmp(line)
+	case "b":
+		return checkB(line, labels)
 	case "blt":
 		return checkBlt(line, labels)
 	case "beq":
 		return checkBeq(line, labels)
 	case "bgt":
 		return checkBgt(line, labels)
+	case "lsl":
+		return checkLsl(line)
+	case "lsr":
+		return checkLsr(line)
 	/*
 	return nil, fmt.Errorf("invalid instruction instruction")
 	*/
@@ -259,20 +265,31 @@ func checkCmp(line []Token) (Op, error) {
 	return nil, fmt.Errorf("invalid cmp instruction")
 }
 
+func checkB(line []Token, labels map[string]int32) (Op, error) {
+	if len(line) != 2 { return nil, fmt.Errorf("error on B instruction") }
+
+	if line[1].Kind != Identifier { panic("how get here?") }
+	_, ok := labels[line[1].Lexeme]
+	if !ok { panic("This shouldn't be possible") }
+
+	return Opl {
+		Op: "bl",
+		I : labels[line[1].Lexeme],
+	}, nil
+}
+
 // blt label
 func checkBlt(line []Token, labels map[string]int32) (Op, error) {
-	switch len(line) {
-	case 2:
-		if line[1].Kind != Identifier { panic("how get here?") }
-		_, ok := labels[line[1].Lexeme]
-		if !ok { panic("This shouldn't be possible") }
-		return Opl{
-			Op: "bltl",
-			I : labels[line[1].Lexeme],
-		}, nil
-	}
+	if len(line) != 2 { return nil, fmt.Errorf("Error on blt instruction") }
 
-	return nil, fmt.Errorf("Error on blt instruction")
+	if line[1].Kind != Identifier { panic("how get here?") }
+	_, ok := labels[line[1].Lexeme]
+	if !ok { panic("This shouldn't be possible") }
+
+	return Opl{
+		Op: "bltl",
+		I : labels[line[1].Lexeme],
+	}, nil
 }
 
 // beq label
@@ -306,56 +323,63 @@ func checkBgt(line []Token, labels map[string]int32) (Op, error) {
 	return nil, fmt.Errorf("Error on bgt instruction")
 }
 
-/*
-// b label
-func checkB(line []Token) bool {
-	// TODO check if its an actuall user defined label
-	return len(line) == 2 && line[1].Kind == Identifier
-}
-
-// blt label
-func checkBlt(line []Token) bool {
-	// TODO check if its an actuall user defined label
-	return len(line) == 2 && line[1].Kind == Identifier
-}
-
-// beq label
-func checkBeq(line []Token) bool {
-	// TODO check if its an actuall user defined label
-	return len(line) == 2 && line[1].Kind == Identifier
-}
-
-// beq label
-func checkBgt(line []Token) bool {
-	// TODO check if its an actuall user defined label
-	return len(line) == 2 && line[1].Kind == Identifier
-}
-
-// bne label
-func checkBne(line []Token) bool {
-	// TODO check if its an actuall user defined label
-	return len(line) == 2 && line[1].Kind == Identifier
-}
-
-
-// and r0, r1, r2
-// and r0, r1, #(number)
-func checkAnd(line []Token) bool {
-	switch len(line){
-	case 6:
-		return line[1].Kind == Register && line[2].Kind == Comma && line[3].Kind == Register && line[4].Kind == Comma && line[5].Kind == Register
-	case 7:
-		return line[1].Kind == Register &&
-		   line[2].Kind == Comma &&
-		   line[3].Kind == Register &&
-		   line[4].Kind == Comma &&
-		   line[5].Kind == Hash &&
-		   isNumber(line[6])
-
+// lsl r0, r0, #1
+// lsl r0, r0, r1
+func checkLsl(line []Token) (Op, error) {
+	if len(line) != 6 && len(line) != 7 { return nil, fmt.Errorf("wrong format for lsl") }
+	if len(line) == 6 {
+		if line[1].Kind != Register && line[2].Kind != Comma && line[3].Kind != Register && line[4].Kind != Comma && line[5].Kind == Register {
+			return nil, fmt.Errorf("format for (lsl): lsl rd, rs1, rs2")
+		}
+		return Oprrr {
+			Op: "lslrrr",
+			R1: RegisterToI8[lower(line[1].Lexeme)],
+			R2: RegisterToI8[lower(line[3].Lexeme)],
+			R3: RegisterToI8[lower(line[5].Lexeme)],
+		}, nil
 	}
-	return false
+	// len line == 7
+	if  line[1].Kind == Register && line[2].Kind == Comma && line[3].Kind == Register && line[4].Kind == Comma && line[5].Kind == Hash && isNumber(line[6]) {
+		var imm int32
+		if isNumber(line[6]) { imm = parseImm(line[6]) } else { panic("parse identifier within lsl rd, rs1, #num") }		// parse immediate
+		return Oprri{
+			Op: "lslrri",
+			R1: RegisterToI8[lower(line[1].Lexeme)],
+			R2: RegisterToI8[lower(line[3].Lexeme)],
+			I: imm,
+		}, nil
+	}
+	return nil, fmt.Errorf("This should be reached?")
 }
-
+// lsr r0, r0, #1
+// lsr r0, r0, r1
+func checkLsr(line []Token) (Op, error) {
+	if len(line) != 6 && len(line) != 7 { return nil, fmt.Errorf("wrong format for lsr") }
+	if len(line) == 6 {
+		if line[1].Kind != Register && line[2].Kind != Comma && line[3].Kind != Register && line[4].Kind != Comma && line[5].Kind == Register {
+			return nil, fmt.Errorf("format for (lsr): lsl rd, rs1, rs2")
+		}
+		return Oprrr {
+			Op: "lsrrrr",
+			R1: RegisterToI8[lower(line[1].Lexeme)],
+			R2: RegisterToI8[lower(line[3].Lexeme)],
+			R3: RegisterToI8[lower(line[5].Lexeme)],
+		}, nil
+	}
+	// len line == 7
+	if  line[1].Kind == Register && line[2].Kind == Comma && line[3].Kind == Register && line[4].Kind == Comma && line[5].Kind == Hash && isNumber(line[6]) {
+		var imm int32
+		if isNumber(line[6]) { imm = parseImm(line[6]) } else { panic("parse identifier within lsr rd, rs1, #num") }		// parse immediate
+		return Oprri{
+			Op: "lsrrri",
+			R1: RegisterToI8[lower(line[1].Lexeme)],
+			R2: RegisterToI8[lower(line[3].Lexeme)],
+			I: imm,
+		}, nil
+	}
+	return nil, fmt.Errorf("This should be reached?")
+}
+/*
 // address must be divisable by 4
 // str r0, .Thing
 // str r0, number
@@ -406,25 +430,8 @@ func checkLdr(line []Token) bool {
 	}
 	return false
 }
-
-// userIdentifier:
-func checkIdentifier(line []Token) bool {
-	// TODO check for user defined/built in identifiers
-	// what about assembly directives?
-	return line[0].Kind == Identifier && line[1].Kind == Colon
-}
-
-
-func printError(line []Token) {
-	// TODO: how about more helpful error messages?
-	fmt.Printf("[ERROR]\n[LINE: %v] ", line[0].Line)
-	for _, t := range line {
-		fmt.Printf("%v ", t.Lexeme)
-	}
-	fmt.Println()
-}
-
 */
+
 func lower(s string) string {
 	return strings.ToLower(s)
 }
