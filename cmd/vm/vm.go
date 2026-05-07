@@ -1,7 +1,7 @@
 package vm
 
 import (
-	"os"
+	// "os"
 	"fmt"
 	"github.com/MrBocch/arm-emu/cmd/assembler"
 )

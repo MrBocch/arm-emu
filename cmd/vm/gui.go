@@ -1,6 +1,7 @@
 package vm
 
 import (
+	"time"
 	"fmt"
 
 	"fyne.io/fyne/v2"
@@ -116,6 +117,94 @@ func updateRegisters() {
 	PCLabel.SetText(fmt.Sprintf("PC:  0x%08X", vm.registers[15]))
 }
 
+//aislop
+func makeRight() fyne.CanvasObject {
+	memTable := widget.NewTable(
+		func() (int, int) { return len(vm.mem), 2 },
+		func() fyne.CanvasObject { return widget.NewLabel("") },
+		func(id widget.TableCellID, o fyne.CanvasObject) {
+			label := o.(*widget.Label)
+
+			if id.Col == 0 {
+				label.SetText(fmt.Sprintf("0x%08X", id.Row*4))
+			} else {
+				label.SetText(fmt.Sprintf("0x%08X", vm.mem[id.Row]))
+			}
+		},
+	)
+
+	memTable.SetColumnWidth(0, 120)
+	memTable.SetColumnWidth(1, 120)
+
+	running := false
+
+	stepBtn := widget.NewButtonWithIcon(
+		"Step",
+		theme.MediaPlayIcon(),
+		func() {
+			vm.Step()
+			updateRegisters()
+			memTable.Refresh()
+		},
+	)
+
+	runBtn := widget.NewButtonWithIcon(
+		"Run",
+		theme.MediaFastForwardIcon(),
+		func() {
+			if running {
+				return
+			}
+
+			running = true
+
+			go func() {
+				for running {
+					vm.Step()
+
+					fyne.Do(func() {
+						updateRegisters()
+						memTable.Refresh()
+					})
+
+					// should set a parameter for chaning amound of time between steps.
+					if false { time.Sleep(100 * time.Millisecond) }
+				}
+			}()
+		},
+	)
+
+	stopBtn := widget.NewButtonWithIcon(
+		"Stop",
+		theme.MediaStopIcon(),
+		func() {
+			running = false
+		},
+	)
+	controls := container.NewGridWithColumns(
+		3,
+		stepBtn,
+		runBtn,
+		stopBtn,
+	)
+
+	title := widget.NewLabel("Memory")
+	title.TextStyle = fyne.TextStyle{Bold: true}
+	title.Alignment = fyne.TextAlignCenter
+
+	return container.NewBorder(
+		container.NewVBox(
+			title,
+			widget.NewLabel("Addresses"),
+		),
+		controls,
+		nil,
+		nil,
+		memTable,
+	)
+}
+
+/*
 func makeRight() fyne.CanvasObject {
 	memTable := widget.NewTable(
 		func() (int, int) { return len(vm.mem), 2 },
@@ -151,3 +240,4 @@ func makeRight() fyne.CanvasObject {
 		memTable,
 	)
 }
+*/
