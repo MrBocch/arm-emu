@@ -93,7 +93,8 @@ func executeOp(c *Computer, op string) {
 	switch op {
 	case "halt":
 		fmt.Println("halted")
-		os.Exit(0)
+		// need to add support for opening a seperate asm file to run through a pop up
+		for ; ; {}
 	default:
 		panic("havent implemented (this instruction) yet?")
 	}
