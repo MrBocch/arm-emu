@@ -167,13 +167,11 @@ func executeOprr(c *Computer, op string, r1 uint8, r2 uint8) {
 			c.nflag = true
 			c.zflag = false
 		}
-	// TODO
+	// bounds checking?
 	case "ldrIndirect":
-		panic()
-		c.registers[r1] = c.mem[r2]
+			c.registers[r1] = c.mem[c.registers[r2]]
 	case "strIndirect":
-		panic()
-		c.mem[r2] = c.registers[r1]
+			c.mem[c.registers[r2]] = c.registers[r1]
 	default:
 		fmt.Printf("havent implemented (%v) yet? \n", op)
 		panic("")
