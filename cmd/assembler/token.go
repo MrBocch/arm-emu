@@ -15,8 +15,8 @@ const (
 	Plus
 	Minus
 	Colon
-	LeftBracket
-	RightBracket
+	LeftBracket      // [
+	RightBracket     // ]
 	LeftCurly
 	RightCurly
 

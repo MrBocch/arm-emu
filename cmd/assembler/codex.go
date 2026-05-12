@@ -145,8 +145,13 @@ var opToB = map[string]uint8 {
 	"lsrrri":15,
 	"lsrrrr":16, //this is getting ridiculous
 
+	// ldr r0, 5
 	"ldrDirect": 17,
 	"strDirect": 18,
+
+	// ldr r0, [r1] // loard r1 with value at address(r1)
+	"ldrIndirect": 19,
+	"strIndirect": 20,
 }
 
 var bToOp = flipMap(opToB)
@@ -248,6 +253,10 @@ func Decode(bin uint32) (Op, error) {
 		imm := int32(bin & 0x000FFFFF)
 		return Opri{Op: opName, R1: r1, I:imm}, nil
 
+	case "ldrIndirect", "strIndirect":
+		r1 := uint8((bin >> 20) & 0xF)
+    	r2 := uint8((bin >> 16) & 0xF)
+     	return Oprr{Op: opName, R1: r1, R2:r2}, nil
     }
 
 

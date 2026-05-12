@@ -94,9 +94,10 @@ func executeOp(c *Computer, op string) {
 	case "halt":
 		fmt.Println("halted")
 		// need to add support for opening a seperate asm file to run through a pop up
-		for ; ; {}
+		// for ; ; {} wtf was I thinking?
 	default:
-		panic("havent implemented (this instruction) yet?")
+		fmt.Printf("havent implemented (%v) yet? \n", op)
+		panic("")
 	}
 }
 
@@ -111,6 +112,9 @@ func executeOpl(c *Computer, op string, i int32) {
 		if !c.nflag && c.zflag { c.registers[PC] = uint32(i) }
 	case "bgtl":
 		if !c.nflag && !c.zflag { c.registers[PC] = uint32(i) }
+	default:
+		fmt.Printf("havent implemented (%v) yet? \n", op)
+		panic("")
 	}
 }
 
@@ -132,6 +136,7 @@ func executeOpri(c *Computer, op string, r1 uint8, i int32) {
 			c.nflag = true
 			c.zflag = false
 		}
+	// should i check for out of bounds checking?
 	case "ldrDirect":
 		c.registers[r1] = c.mem[i]
 	case "strDirect":
@@ -162,9 +167,16 @@ func executeOprr(c *Computer, op string, r1 uint8, r2 uint8) {
 			c.nflag = true
 			c.zflag = false
 		}
-
+	// TODO
+	case "ldrIndirect":
+		panic()
+		c.registers[r1] = c.mem[r2]
+	case "strIndirect":
+		panic()
+		c.mem[r2] = c.registers[r1]
 	default:
-		panic("havent implemented (this instruction) yet?")
+		fmt.Printf("havent implemented (%v) yet? \n", op)
+		panic("")
 	}
 }
 
@@ -179,7 +191,8 @@ func executeOprri(c *Computer, op string, r1 uint8, r2 uint8, i int32) {
 	case "lsrrri":
 		c.registers[r1] = c.registers[r2] >> uint32(i)
 	default:
-		panic("haven't implemented (this instruction) yet?")
+		fmt.Printf("havent implemented (%v) yet? \n", op)
+		panic("")
 	}
 }
 
@@ -194,6 +207,7 @@ func executeOprrr(c *Computer, op string, r1 uint8, r2 uint8, r3 uint8) {
 	case "lsrrrr":
 		c.registers[r1] = c.registers[r2] >> c.registers[r3]
 	default:
-		panic("havent implemented (this instruction) yet?")
+		fmt.Printf("havent implemented (%v) yet? \n", op)
+		panic("")
 	}
 }

@@ -1,7 +1,9 @@
-// ldr/str directly
-mov r0, #99
-str r0, 0x1C
-ldr r1, 0x1C
+// ldr/str indirectly
+mov r1, #1
+mov r0, #0
+// overwriting code here
+str r0, [r1]
+ldr r1, [r0]
 
 
 halt

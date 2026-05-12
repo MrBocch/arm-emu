@@ -104,31 +104,6 @@ func getStructure(line []Token, labels map[string]int32) (Op, error) {
 		return checkLdr(line, labels)
 	case "str":
 		return checkStr(line, labels)
-	/*
-	return nil, fmt.Errorf("invalid instruction instruction")
-	*/
-	/*
-	case "b":
-		return checkB(line)
-	case "blt":
-		return checkBlt(line)
-	case "beq":
-		return checkBeq(line)
-	case "bgt":
-		return checkBgt(line)
-	case "bne":
-		return checkBne(line)
-	case "ldr":
-		return checkLdr(line)
-	case "and":
-		return checkAnd(line)
-	case "str":
-		return checkStr(line)
-
-	default:
-		// check for identifier
-		return checkIdentifier(line)
-	*/
 	}
 	return nil, fmt.Errorf("error getting structure")
 }
@@ -385,8 +360,10 @@ func checkLsr(line []Token) (Op, error) {
 
 // Direct addressing
 // (ldr|str) rd, (bit|dec|hex| label)
+// Indirect addressing
+// (ldr|str) rd, [reg]
 func checkLdr(line []Token, labels map[string]int32) (Op, error) {
-	if len(line) != 4 { return nil, fmt.Errorf("Error con formating ldr")}
+	if len(line) != 4 && len(line) != 6 { return nil, fmt.Errorf("Error con formating ldr") }
 	// direct addressing
 	if line[1].Kind == Register && line[2].Kind == Comma {
 		r1 := RegisterToI8[lower(line[1].Lexeme)]
@@ -405,15 +382,26 @@ func checkLdr(line []Token, labels map[string]int32) (Op, error) {
 			I: i,
 		}, nil
 	}
+
+	// indirect addressing
+	if line[1].Kind == Register && line[2].Kind == Comma && line[3].Kind == LeftBracket && line[4].Kind == Register && line[5].Kind == RightBracket {
+		r1 := RegisterToI8[lower(line[1].Lexeme)]
+		r2 := RegisterToI8[lower(line[4].Lexeme)]
+		return Oprr {
+			Op: "ldrIndirect",
+			R1: r1,
+			R2: r2,
+		}, nil
+	}
 	return nil, fmt.Errorf("Error on structure")
 }
 
 // Direct addressing
 // (ldr|str) rd, (bit|dec|hex| label)
 func checkStr(line []Token, labels map[string]int32) (Op, error) {
-	if len(line) != 4 { return nil, fmt.Errorf("Error con formating str")}
+	if len(line) != 4 && len(line) != 6 { return nil, fmt.Errorf("Error con formating str")}
 	// direct addressing
-	if line[1].Kind == Register && line[2].Kind == Comma {
+	if len(line) == 4 && line[1].Kind == Register && line[2].Kind == Comma {
 		r1 := RegisterToI8[lower(line[1].Lexeme)]
 		var i int32
 		switch line[3].Kind {
@@ -428,6 +416,16 @@ func checkStr(line []Token, labels map[string]int32) (Op, error) {
 			Op: "strDirect",
 			R1: r1,
 			I: i,
+		}, nil
+	}
+	// indirect addressing
+	if len(line) == 6 && line[1].Kind == Register && line[2].Kind == Comma && line[3].Kind == LeftBracket && line[4].Kind == Register && line[5].Kind == RightBracket {
+		r1 := RegisterToI8[lower(line[1].Lexeme)]
+		r2 := RegisterToI8[lower(line[4].Lexeme)]
+		return Oprr {
+			Op: "strIndirect",
+			R1: r1,
+			R2: r2,
 		}, nil
 	}
 	return nil, fmt.Errorf("Error on structure")
