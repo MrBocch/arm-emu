@@ -46,9 +46,8 @@ func Analyze(tokens []Token) ([]uint32, error) {
 
 		op, err := getStructure(line, userLabels)
 		if err != nil {
-			fmt.Printf("[ERROR LINE %v]\n", line[0].Line)
+			fmt.Printf("[ERROR LINE %v]: %v\n", line[0].Line, err)
 			printCodeLine(line)
-			// fmt.Println(err)
 			hasErrors = true
 		}
 
@@ -101,6 +100,10 @@ func getStructure(line []Token, labels map[string]int32) (Op, error) {
 		return checkLsl(line)
 	case "lsr":
 		return checkLsr(line)
+	case "ldr":
+		return checkLdr(line, labels)
+	case "str":
+		return checkStr(line, labels)
 	/*
 	return nil, fmt.Errorf("invalid instruction instruction")
 	*/
@@ -379,8 +382,58 @@ func checkLsr(line []Token) (Op, error) {
 	}
 	return nil, fmt.Errorf("This should be reached?")
 }
+
+// Direct addressing
+// (ldr|str) rd, (bit|dec|hex| label)
+func checkLdr(line []Token, labels map[string]int32) (Op, error) {
+	if len(line) != 4 { return nil, fmt.Errorf("Error con formating ldr")}
+	// direct addressing
+	if line[1].Kind == Register && line[2].Kind == Comma {
+		r1 := RegisterToI8[lower(line[1].Lexeme)]
+		var i int32
+		switch line[3].Kind {
+		case BitNumber, Number, HexNumber:
+			i = parseImm(line[3])
+		case Identifier:
+			v, in := labels[line[3].Lexeme]
+			if in == false { return nil, fmt.Errorf("Label not recognized") }
+			i = v
+		}
+		return Opri {
+			Op: "ldrDirect",
+			R1: r1,
+			I: i,
+		}, nil
+	}
+	return nil, fmt.Errorf("Error on structure")
+}
+
+// Direct addressing
+// (ldr|str) rd, (bit|dec|hex| label)
+func checkStr(line []Token, labels map[string]int32) (Op, error) {
+	if len(line) != 4 { return nil, fmt.Errorf("Error con formating str")}
+	// direct addressing
+	if line[1].Kind == Register && line[2].Kind == Comma {
+		r1 := RegisterToI8[lower(line[1].Lexeme)]
+		var i int32
+		switch line[3].Kind {
+		case BitNumber, Number, HexNumber:
+			i = parseImm(line[3])
+		case Identifier:
+			v, in := labels[line[3].Lexeme]
+			if in == false { return nil, fmt.Errorf("Label not recognized") }
+			i = v
+		}
+		return Opri {
+			Op: "strDirect",
+			R1: r1,
+			I: i,
+		}, nil
+	}
+	return nil, fmt.Errorf("Error on structure")
+}
 /*
-// address must be divisable by 4
+// address must be divisable by 4, (forgor about it.)
 // str r0, .Thing
 // str r0, number
 // str r0, [r1]

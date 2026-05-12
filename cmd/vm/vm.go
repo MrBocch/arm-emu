@@ -132,9 +132,14 @@ func executeOpri(c *Computer, op string, r1 uint8, i int32) {
 			c.nflag = true
 			c.zflag = false
 		}
+	case "ldrDirect":
+		c.registers[r1] = c.mem[i]
+	case "strDirect":
+		c.mem[i] = c.registers[r1]
 
 	default:
-		panic("havent implemented (this instruction) yet?")
+		fmt.Printf("havent implemented (%v) yet? \n", op)
+		panic("")
 	}
 }
 

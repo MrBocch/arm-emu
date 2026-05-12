@@ -144,6 +144,9 @@ var opToB = map[string]uint8 {
 	"lslrrr":14,
 	"lsrrri":15,
 	"lsrrrr":16, //this is getting ridiculous
+
+	"ldrDirect": 17,
+	"strDirect": 18,
 }
 
 var bToOp = flipMap(opToB)
@@ -239,7 +242,14 @@ func Decode(bin uint32) (Op, error) {
 		r2 := uint8((bin >> 16) & 0xF)
 		i  := int32(bin & 0xFFFF) // signed 16-bit immediate
 		return Oprri{Op: opName, R1: r1, R2: r2, I: i}, nil
+
+	case "ldrDirect", "strDirect":
+		r1 := uint8((bin>>20) & 0xF)
+		imm := int32(bin & 0x000FFFFF)
+		return Opri{Op: opName, R1: r1, I:imm}, nil
+
     }
+
 
     return nil, fmt.Errorf("error: operation %q not implemented yet", opName)
 }

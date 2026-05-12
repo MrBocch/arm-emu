@@ -118,6 +118,8 @@ func updateRegisters() {
 }
 
 //aislop
+// seems to be stuck on a infinite loop
+// when you go step by step and halt
 func makeRight() fyne.CanvasObject {
 	memTable := widget.NewTable(
 		func() (int, int) { return len(vm.mem), 2 },
@@ -126,7 +128,7 @@ func makeRight() fyne.CanvasObject {
 			label := o.(*widget.Label)
 
 			if id.Col == 0 {
-				label.SetText(fmt.Sprintf("0x%08X", id.Row*4))
+				label.SetText(fmt.Sprintf("0x%08X", id.Row))
 			} else {
 				label.SetText(fmt.Sprintf("0x%08X", vm.mem[id.Row]))
 			}
