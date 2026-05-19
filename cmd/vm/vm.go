@@ -22,6 +22,7 @@ type Computer struct {
 	//
 	// ugh
 	stdout strings.Builder
+	halted bool 
 }
 
 var MEM_LIMIT = 1_000_000
@@ -32,6 +33,7 @@ func initComputer(registerCount int, memory []uint32) Computer {
         mem:       make([]uint32, MEM_LIMIT),
 		nflag: false,
 		zflag: false,
+		halted: false,
     }
     c.LoadProgram(memory)
     return c
@@ -50,6 +52,7 @@ var SP = 14
 var PC = 15
 
 func (c *Computer) Step() {
+	if c.halted { return }
 	// fetch
 	// what if pannics? here?
 	addr := c.registers[PC]
@@ -97,8 +100,7 @@ func executeOp(c *Computer, op string) {
 	switch op {
 	case "halt":
 		fmt.Println("halted")
-		// need to add support for opening a seperate asm file to run through a pop up
-		// for ; ; {} wtf was I thinking?
+		c.halted = true
 	default:
 		fmt.Printf("havent implemented (%v) yet? \n", op)
 		panic("")
