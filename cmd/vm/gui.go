@@ -33,7 +33,8 @@ var (
 	SPLabel *widget.Label
 	PCLabel *widget.Label
 
-	OutputEntry *widget.Entry
+	// OutputEntry *widget.Entry
+	OutputLabel *widget.Label
 )
 
 // a code smell?
@@ -126,7 +127,8 @@ func updateRegisters() {
 }
 
 func updateConsole() {
-	OutputEntry.SetText(vm.stdout.String())
+	// OutputEntry.SetText(vm.stdout.String())
+	OutputLabel.SetText(vm.stdout.String())
 }
 
 //aislop
@@ -221,18 +223,20 @@ func makeRight() fyne.CanvasObject {
 }
 
 func makeConsole() fyne.CanvasObject {
-	OutputEntry = widget.NewMultiLineEntry()
+	//OutputEntry = widget.NewMultiLineEntry()
+	OutputLabel = widget.NewLabel("")
+	OutputLabel.Wrapping = fyne.TextWrapWord
 
-	OutputEntry.Wrapping = fyne.TextWrapWord
+	// OutputEntry.Wrapping = fyne.TextWrapWord
 
 	// Make it effectively read-only without disabling it
-	OutputEntry.OnChanged = func(string) {
-		text := vm.stdout.String()
+	// OutputEntry.OnChanged = func(string) {
+	// 	text := vm.stdout.String()
 
-		if OutputEntry.Text != text {
-			OutputEntry.SetText(text)
-		}
-	}
+	// 	if OutputEntry.Text != text {
+	// 		OutputEntry.SetText(text)
+	// 	}
+	// }
 
 	title := widget.NewLabel("Console")
 	title.TextStyle = fyne.TextStyle{Bold: true}
@@ -243,63 +247,7 @@ func makeConsole() fyne.CanvasObject {
 		nil,
 		nil,
 		nil,
-		OutputEntry,
+		container.NewScroll(OutputLabel),
+		//container.NewScroll(OutputEntry),
 	)
 }
-
-// func makeConsole() fyne.CanvasObject {
-// 	OutputEntry = widget.NewMultiLineEntry()
-
-// 	OutputEntry.Wrapping = fyne.TextWrapWord
-// 	OutputEntry.Disable()
-
-// 	title := widget.NewLabel("Console")
-// 	title.TextStyle = fyne.TextStyle{Bold: true}
-// 	title.Alignment = fyne.TextAlignCenter
-
-// 	return container.NewBorder(
-// 		title,
-// 		nil,
-// 		nil,
-// 		nil,
-// 		OutputEntry,
-// 	)
-// }
-
-/*
-func makeRight() fyne.CanvasObject {
-	memTable := widget.NewTable(
-		func() (int, int) { return len(vm.mem), 2 },
-		func() fyne.CanvasObject { return widget.NewLabel("") },
-		func(id widget.TableCellID, o fyne.CanvasObject) {
-			label := o.(*widget.Label)
-			if id.Col == 0 {
-				label.SetText(fmt.Sprintf("0x%08X", id.Row*4))
-			} else {
-				label.SetText(fmt.Sprintf("0x%08X", vm.mem[id.Row]))
-			}
-		},
-	)
-	memTable.SetColumnWidth(0, 120) // ADDRESS column
-	memTable.SetColumnWidth(1, 120) // VALUE column
-
-	stepBtn := widget.NewButtonWithIcon("Step", theme.MediaPlayIcon(), func() {
-		vm.Step()
-		updateRegisters()
-		memTable.Refresh()
-	})
-
-	title := widget.NewLabel("Memory")
-	title.TextStyle = fyne.TextStyle{Bold: true}
-	title.Alignment = fyne.TextAlignCenter
-	return container.NewBorder(
-		container.NewVBox(
-			title,
-			widget.NewLabel("Addresses"),
-		),
-		stepBtn,
-		nil, nil,
-		memTable,
-	)
-}
-*/
