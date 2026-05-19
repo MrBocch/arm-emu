@@ -3,6 +3,7 @@ package vm
 import (
 	// "os"
 	"fmt"
+	"strings"
 	"github.com/MrBocch/arm-emu/cmd/assembler"
 )
 
@@ -18,6 +19,9 @@ type Computer struct {
 	// will comeback to this.
 	// cflag     bool
 	// vflag     bool
+	//
+	// ugh
+	stdout strings.Builder
 }
 
 var MEM_LIMIT = 1_000_000
@@ -112,6 +116,8 @@ func executeOpl(c *Computer, op string, i int32) {
 		if !c.nflag && c.zflag { c.registers[PC] = uint32(i) }
 	case "bgtl":
 		if !c.nflag && !c.zflag { c.registers[PC] = uint32(i) }
+	case "sys":
+		runSys(c, i)
 	default:
 		fmt.Printf("havent implemented (%v) yet? \n", op)
 		panic("")
@@ -206,6 +212,50 @@ func executeOprrr(c *Computer, op string, r1 uint8, r2 uint8, r3 uint8) {
 		c.registers[r1] = c.registers[r2] >> c.registers[r3]
 	default:
 		fmt.Printf("havent implemented (%v) yet? \n", op)
+		panic("")
+	}
+}
+
+func runSys(c *Computer, i int32) {
+	// this code base deserves to be destroyed!
+	switch i {
+	// print r0 as signed int
+	case 0:
+		c.stdout.WriteString(
+			fmt.Sprintf("%d", int32(c.registers[0])),
+		)
+
+	// print r0 as unsigned int
+	case 1:
+		c.stdout.WriteString(
+			fmt.Sprintf("%d", c.registers[0]),
+		)
+
+	// print r0 as hex
+	case 2:
+		c.stdout.WriteString(
+			fmt.Sprintf("0x%08X", c.registers[0]),
+		)
+
+	// print r0 as char
+	case 3:
+		c.stdout.WriteByte(byte(c.registers[0]))
+
+	// print newline
+	case 4:
+		c.stdout.WriteByte('\n')
+
+	// clear output buffer
+	case 5:
+		c.stdout.Reset()
+
+	// halt and catch fire
+	// https://en.wikipedia.org/wiki/Halt_and_Catch_Fire_(computing)
+	case 67:
+		panic("HALT AND CATCHING FIRE")
+
+	default:
+		fmt.Printf("Dont recognize this syscalls, panicing")
 		panic("")
 	}
 }

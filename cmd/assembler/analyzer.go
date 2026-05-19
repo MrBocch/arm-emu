@@ -104,6 +104,8 @@ func getStructure(line []Token, labels map[string]int32) (Op, error) {
 		return checkLdr(line, labels)
 	case "str":
 		return checkStr(line, labels)
+	case "sys":
+		return checkSys(line)
 	}
 	return nil, fmt.Errorf("error getting structure")
 }
@@ -430,6 +432,19 @@ func checkStr(line []Token, labels map[string]int32) (Op, error) {
 	}
 	return nil, fmt.Errorf("Error on structure")
 }
+
+// sys #number
+func checkSys(line []Token) (Op, error) {
+	if len(line) != 3 { return nil, fmt.Errorf("Syscalls are  made like this\n \"sys #literalNumber\"")}
+	if line[1].Kind != Hash { return nil, fmt.Errorf("Syscalls are  made like this\n \"sys #literalNumber\"")}  
+	var imm int32
+	if isNumber(line[2]) { imm = parseImm(line[2]) } else { panic("parse identifier within mov") }
+	return Opl {
+		Op: "sys",
+		I: imm,
+	}, nil
+
+}
 /*
 // address must be divisable by 4, (forgor about it.)
 // str r0, .Thing
@@ -515,4 +530,5 @@ func parseImm(tok Token) int32 {
 
 func isLabel(line []Token) bool {
 	return len(line) == 2 && line[0].Kind == Identifier && line[1].Kind == Colon
+	
 }

@@ -43,7 +43,7 @@ func RunGui(mem []uint32) {
 	vm.LoadProgram(mem)
 
 	a := app.New()
-	// a.Settings().SetTheme(theme.LightTheme())
+	a.Settings().SetTheme(theme.LightTheme())
 
 	w := a.NewWindow(APP_TITLE)
 	w.Resize(fyne.NewSize(700, 700))
@@ -53,8 +53,8 @@ func RunGui(mem []uint32) {
 	layout := container.NewGridWithColumns(
 		3,
 		makeLeft(), // should have name this something more useful like
-		makeConsole(),
 		makeRight(),// regiterTable or memoryTable
+		makeConsole(),
 	)
 
 	w.SetContent(layout)
@@ -125,6 +125,10 @@ func updateRegisters() {
 	PCLabel.SetText(fmt.Sprintf("PC:  0x%08X", vm.registers[15]))
 }
 
+func updateConsole() {
+	OutputEntry.SetText(vm.stdout.String())
+}
+
 //aislop
 // seems to be stuck on a infinite loop
 // when you go step by step and halt
@@ -155,6 +159,7 @@ func makeRight() fyne.CanvasObject {
 			vm.Step()
 			updateRegisters()
 			memTable.Refresh()
+			updateConsole()
 		},
 	)
 
@@ -175,6 +180,7 @@ func makeRight() fyne.CanvasObject {
 					fyne.Do(func() {
 						updateRegisters()
 						memTable.Refresh()
+						updateConsole()
 					})
 
 					// should set a parameter for chaning amound of time between steps.
@@ -218,7 +224,15 @@ func makeConsole() fyne.CanvasObject {
 	OutputEntry = widget.NewMultiLineEntry()
 
 	OutputEntry.Wrapping = fyne.TextWrapWord
-	OutputEntry.Disable()
+
+	// Make it effectively read-only without disabling it
+	OutputEntry.OnChanged = func(string) {
+		text := vm.stdout.String()
+
+		if OutputEntry.Text != text {
+			OutputEntry.SetText(text)
+		}
+	}
 
 	title := widget.NewLabel("Console")
 	title.TextStyle = fyne.TextStyle{Bold: true}
@@ -232,6 +246,25 @@ func makeConsole() fyne.CanvasObject {
 		OutputEntry,
 	)
 }
+
+// func makeConsole() fyne.CanvasObject {
+// 	OutputEntry = widget.NewMultiLineEntry()
+
+// 	OutputEntry.Wrapping = fyne.TextWrapWord
+// 	OutputEntry.Disable()
+
+// 	title := widget.NewLabel("Console")
+// 	title.TextStyle = fyne.TextStyle{Bold: true}
+// 	title.Alignment = fyne.TextAlignCenter
+
+// 	return container.NewBorder(
+// 		title,
+// 		nil,
+// 		nil,
+// 		nil,
+// 		OutputEntry,
+// 	)
+// }
 
 /*
 func makeRight() fyne.CanvasObject {
