@@ -32,6 +32,8 @@ var (
 	LRLabel *widget.Label
 	SPLabel *widget.Label
 	PCLabel *widget.Label
+
+	OutputEntry *widget.Entry
 )
 
 // a code smell?
@@ -47,9 +49,15 @@ func RunGui(mem []uint32) {
 	w.Resize(fyne.NewSize(700, 700))
 
 
-	split := container.NewHSplit(makeLeft(), makeRight())
+	// split := container.NewHSplit(makeLeft(), makeRight())
+	layout := container.NewGridWithColumns(
+		3,
+		makeLeft(), // should have name this something more useful like
+		makeConsole(),
+		makeRight(),// regiterTable or memoryTable
+	)
 
-	w.SetContent(split)
+	w.SetContent(layout)
 	w.ShowAndRun()
 }
 
@@ -203,6 +211,25 @@ func makeRight() fyne.CanvasObject {
 		nil,
 		nil,
 		memTable,
+	)
+}
+
+func makeConsole() fyne.CanvasObject {
+	OutputEntry = widget.NewMultiLineEntry()
+
+	OutputEntry.Wrapping = fyne.TextWrapWord
+	OutputEntry.Disable()
+
+	title := widget.NewLabel("Console")
+	title.TextStyle = fyne.TextStyle{Bold: true}
+	title.Alignment = fyne.TextAlignCenter
+
+	return container.NewBorder(
+		title,
+		nil,
+		nil,
+		nil,
+		OutputEntry,
 	)
 }
 
