@@ -11,6 +11,13 @@ func main(){
 	if len(os.Args) == 1 {
 		fmt.Println("How to use me")
 		fmt.Println("arm-emu [filepath]")
+
+		fmt.Println("\n    --output <filename>")
+		fmt.Println("       for outputing the binary")
+
+		fmt.Println("\n    --run <filename>")
+		fmt.Println("       for running a binary")
+
 		os.Exit(1)
 	}
 
