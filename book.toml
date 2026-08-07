@@ -1,4 +1,7 @@
 [book]
-title = "arm-emu docs"
+title = "ARM EMU"
 authors = ["MrBocch"]
 language = "en"
+
+[build]
+build-dir = "docs"
