@@ -8,7 +8,7 @@ class MDBookSidebarScrollbox extends HTMLElement {
         super();
     }
     connectedCallback() {
-        this.innerHTML = '<ol class="chapter"><li class="chapter-item expanded "><span class="chapter-link-wrapper"><a href="chapter_1.html"><strong aria-hidden="true">1.</strong> Chapter 1</a></span></li></ol>';
+        this.innerHTML = '<ol class="chapter"><li class="chapter-item expanded "><span class="chapter-link-wrapper"><a href="what_is_arm-emu.html"><strong aria-hidden="true">1.</strong> What is arm-emu</a></span></li><li class="chapter-item expanded "><span class="chapter-link-wrapper"><a href="installation.html"><strong aria-hidden="true">2.</strong> arm-emu Installation</a></span></li><li class="chapter-item expanded "><span class="chapter-link-wrapper"><a href="hello_world.html"><strong aria-hidden="true">3.</strong> Hello World</a></span></li><li class="chapter-item expanded "><span class="chapter-link-wrapper"><a href="cli.html"><strong aria-hidden="true">4.</strong> arm-emu cli</a></span></li><li class="chapter-item expanded "><span class="chapter-link-wrapper"><a href="assembler.html"><strong aria-hidden="true">5.</strong> arm-emu assembler</a></span></li><li class="chapter-item expanded "><span class="chapter-link-wrapper"><a href="vm.html"><strong aria-hidden="true">6.</strong> arm-emu virtual machine</a></span></li></ol>';
         // Set the current, active page, and reveal it if it's hidden
         let current_page = document.location.href.toString().split('#')[0].split('?')[0];
         if (current_page.endsWith('/')) {
