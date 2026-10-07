@@ -2,14 +2,14 @@
 
 A [armlite](https://peterhigginson.co.uk/ARMlite/) emulator.
 
-## Parity
+## example
 
-Not a complete 100% clone. *Whats different?*
+Here is an example of a program that prints out a multiplication table. 
 
-## How to use
+[showcase](https://github.com/user-attachments/assets/9bab4dbe-cf60-47bc-8aef-318b0f6faa94)
 
-- Assembler
-- Emulator
+Using a 'sys' is a work around for not knowing what interupts are, and its just ugly.
+Im rewriting it.
 
 ## Notes
 
