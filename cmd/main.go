@@ -29,7 +29,7 @@ func main(){
 		os.Exit(1)
 	}
 	tokens := assembler.Lex(string(file))
-	// assembler.PrintTokens(tokens)
+	assembler.PrintTokens(tokens)
 
 	bin, err := assembler.Analyze(tokens)
 	if err != nil {
@@ -66,6 +66,5 @@ func decodeBin(bin []uint32) {
 		op, err := assembler.Decode(b)
 		if err != nil { fmt.Println(err); panic("error in decoding") }
 		fmt.Printf("%d, %v\n", idx, op)
-
 	}
 }
